@@ -1,13 +1,19 @@
-import React from 'react';
+import { useState, useRef, useEffect } from 'react';
 
-var styles = {"test":"_3ybTi"};
+const useValidator = () => {
+  const [state, setstate] = useState(null);
+  const ref = useRef(null);
 
-var ExampleComponent = function ExampleComponent(_ref) {
-  var text = _ref.text;
-  return /*#__PURE__*/React.createElement("div", {
-    className: styles.test
-  }, "Example Component: ", text);
+  const track = (elem, rules) => {
+    ref.current = elem;
+    setstate(ref);
+  };
+
+  useEffect(() => {
+    ref.current.onkeydown = e => console.log(e.target.value);
+  }, [state]);
+  return [track];
 };
 
-export { ExampleComponent };
+export { useValidator };
 //# sourceMappingURL=index.modern.js.map

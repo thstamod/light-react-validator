@@ -1,6 +1,17 @@
-import React from 'react'
-import styles from './styles.module.css'
+import { useRef, useState, useEffect } from 'react'
+// import builtInValidators from './utils/builtIns'
 
-export const ExampleComponent = ({ text }) => {
-  return <div className={styles.test}>Example Component: {text}</div>
+export const useValidator = () => {
+  const [state, setstate] = useState(null)
+  const ref = useRef(null)
+  const track = (elem, rules) => {
+    ref.current = elem
+    setstate(ref)
+  }
+
+  useEffect(() => {
+    ref.current.onkeydown = (e) => console.log(e.target.value)
+  }, [state])
+
+  return [track]
 }
