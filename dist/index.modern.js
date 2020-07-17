@@ -1,9 +1,12 @@
-import { createElement } from 'react';
+import React from 'react';
 
-const ExampleComponent = ({
-  text
-}) => {
-  return createElement("div", null, "Example Component: ", text);
+var styles = {"test":"_3ybTi"};
+
+var ExampleComponent = function ExampleComponent(_ref) {
+  var text = _ref.text;
+  return /*#__PURE__*/React.createElement("div", {
+    className: styles.test
+  }, "Example Component: ", text);
 };
 
 export { ExampleComponent };

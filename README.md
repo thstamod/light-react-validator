@@ -12,7 +12,7 @@ npm install --save light-react-validator
 
 ## Usage
 
-```tsx
+```jsx
 import React, { Component } from 'react'
 
 import MyComponent from 'light-react-validator'
