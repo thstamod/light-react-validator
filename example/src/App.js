@@ -4,20 +4,20 @@ import { useValidator } from 'light-react-validator'
 import 'light-react-validator/dist/index.css'
 
 const App = () => {
-  const [track] = useValidator()
+  const [track, submitForm] = useValidator()
 
   console.log('rerender')
-  const submit = (e) => {
-    e.preventDefault()
+  const submit = () => {
     console.log('submitted')
   }
 
   return (
-    <form onSubmit={(e) => submit(e)}>
+    <form onSubmit={(e) => submitForm(submit)(e)}>
       <label htmlFor='email'>email</label>
       <input
         ref={(elem) => track(elem, { require: true })}
         onChange={(e) => console.log('original onChange ', e.target.value)}
+        onFocus={(e) => console.log('original onfocus ', e.target.value)}
         type='text'
         id='email'
       />
@@ -26,6 +26,7 @@ const App = () => {
       <input
         ref={track}
         onChange={(e) => console.log('original onChange ', e.target.value)}
+        onFocus={(e) => console.log('original onfocus ', e.target.value)}
         type='text'
         id='free'
       />

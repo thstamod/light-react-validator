@@ -1,12 +1,19 @@
-import { useRef } from 'react';
+import { useRef, createRef } from 'react';
 
 const useValidator = () => {
   const elements = useRef(new Map());
-  const ref = useRef(null);
+  const touchedElements = useRef(new Map());
+  const dirtyElements = useRef(new Map());
+  const errors = createRef({});
+
+  const submitForm = fn => e => {
+    e.preventDefault();
+    console.log('validator formSubmit');
+    fn();
+  };
 
   const track = (elem, rules) => {
-    console.log(elem, rules);
-    console.log(elements);
+    const ref = createRef(null);
     ref.current = elem;
     elements.current.set(elem, {
       touched: false,
@@ -15,11 +22,19 @@ const useValidator = () => {
       valid: true,
       rules
     });
-
-    ref.current.onchange = e => console.log('second onChange ', e.target.value);
+    ref.current.onchange = partialOnChange(ref);
+    ref.current.onfocus = partialOnFocus(ref);
   };
 
-  return [track];
+  const partialOnChange = ref => e => console.log('second onChange ', e.target.value, ref);
+
+  const partialOnFocus = ref => e => {
+    touchedElements.current.set(ref);
+    ref.current.onfocus = '';
+    console.log('second onFocus ', e.target.value, ref);
+  };
+
+  return [track, submitForm, errors];
 };
 
 export { useValidator };

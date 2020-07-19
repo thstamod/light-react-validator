@@ -2,11 +2,20 @@ var react = require('react');
 
 var useValidator = function useValidator() {
   var elements = react.useRef(new Map());
-  var ref = react.useRef(null);
+  var touchedElements = react.useRef(new Map());
+  var dirtyElements = react.useRef(new Map());
+  var errors = react.createRef({});
+
+  var submitForm = function submitForm(fn) {
+    return function (e) {
+      e.preventDefault();
+      console.log('validator formSubmit');
+      fn();
+    };
+  };
 
   var track = function track(elem, rules) {
-    console.log(elem, rules);
-    console.log(elements);
+    var ref = react.createRef(null);
     ref.current = elem;
     elements.current.set(elem, {
       touched: false,
@@ -15,13 +24,25 @@ var useValidator = function useValidator() {
       valid: true,
       rules: rules
     });
+    ref.current.onchange = partialOnChange(ref);
+    ref.current.onfocus = partialOnFocus(ref);
+  };
 
-    ref.current.onchange = function (e) {
-      return console.log('second onChange ', e.target.value);
+  var partialOnChange = function partialOnChange(ref) {
+    return function (e) {
+      return console.log('second onChange ', e.target.value, ref);
     };
   };
 
-  return [track];
+  var partialOnFocus = function partialOnFocus(ref) {
+    return function (e) {
+      touchedElements.current.set(ref);
+      ref.current.onfocus = '';
+      console.log('second onFocus ', e.target.value, ref);
+    };
+  };
+
+  return [track, submitForm, errors];
 };
 
 exports.useValidator = useValidator;
