@@ -1,17 +1,24 @@
-import { useState, useRef, useEffect } from 'react';
+import { useRef } from 'react';
 
 const useValidator = () => {
-  const [state, setstate] = useState(null);
+  const elements = useRef(new Map());
   const ref = useRef(null);
 
   const track = (elem, rules) => {
+    console.log(elem, rules);
+    console.log(elements);
     ref.current = elem;
-    setstate(ref);
+    elements.current.set(elem, {
+      touched: false,
+      dirty: false,
+      value: null,
+      valid: true,
+      rules
+    });
+
+    ref.current.onchange = e => console.log('second onChange ', e.target.value);
   };
 
-  useEffect(() => {
-    ref.current.onkeydown = e => console.log(e.target.value);
-  }, [state]);
   return [track];
 };
 

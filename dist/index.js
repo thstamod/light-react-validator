@@ -1,22 +1,26 @@
 var react = require('react');
 
 var useValidator = function useValidator() {
-  var _useState = react.useState(null),
-      state = _useState[0],
-      setstate = _useState[1];
-
+  var elements = react.useRef(new Map());
   var ref = react.useRef(null);
 
   var track = function track(elem, rules) {
+    console.log(elem, rules);
+    console.log(elements);
     ref.current = elem;
-    setstate(ref);
+    elements.current.set(elem, {
+      touched: false,
+      dirty: false,
+      value: null,
+      valid: true,
+      rules: rules
+    });
+
+    ref.current.onchange = function (e) {
+      return console.log('second onChange ', e.target.value);
+    };
   };
 
-  react.useEffect(function () {
-    ref.current.onkeydown = function (e) {
-      return console.log(e.target.value);
-    };
-  }, [state]);
   return [track];
 };
 
