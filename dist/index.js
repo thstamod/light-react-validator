@@ -18,48 +18,6 @@ function _extends() {
   return _extends.apply(this, arguments);
 }
 
-function _unsupportedIterableToArray(o, minLen) {
-  if (!o) return;
-  if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-  var n = Object.prototype.toString.call(o).slice(8, -1);
-  if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(o);
-  if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-}
-
-function _arrayLikeToArray(arr, len) {
-  if (len == null || len > arr.length) len = arr.length;
-
-  for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-
-  return arr2;
-}
-
-function _createForOfIteratorHelperLoose(o, allowArrayLike) {
-  var it;
-
-  if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
-    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-      if (it) o = it;
-      var i = 0;
-      return function () {
-        if (i >= o.length) return {
-          done: true
-        };
-        return {
-          done: false,
-          value: o[i++]
-        };
-      };
-    }
-
-    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-  }
-
-  it = o[Symbol.iterator]();
-  return it.next.bind(it);
-}
-
 var builtInValidators = {
   require: function require(input) {
     return input.trim().length > 0;
@@ -89,8 +47,7 @@ var useValidator = function useValidator(config) {
       e.preventDefault();
       console.log('validator formSubmit');
 
-      for (var _iterator = _createForOfIteratorHelperLoose(elements), _step; !(_step = _iterator()).done;) {
-        var el = _step.value;
+      for (var el in elements.current) {
         fieldValidation(el);
       }
 
@@ -140,7 +97,7 @@ var useValidator = function useValidator(config) {
       console.log(e);
 
       if (!dirtyElements.current.has(ref)) {
-        dirtyElements.current.set(ref);
+        dirtyElements.current.set(ref, null);
         return;
       }
 
@@ -193,21 +150,21 @@ var useValidator = function useValidator(config) {
   var track = function track(elem, rules) {
     if (!elem) return;
     var ref = react.createRef();
-    if (elements.current.has(ref)) return;
     ref.current = elem;
+    ref.current.addEventListener('focus', partialOnFocus(ref));
+    ref.current.addEventListener('input', keyup(ref));
+    if (elements.current.has(ref)) return;
     elements.current.set(elem, _extends({
       valid: true
     }, rules && {
       data: rules
     }));
-    ref.current.addEventListener('focus', partialOnFocus(ref));
-    ref.current.addEventListener('input', keyup(ref));
   };
 
   var partialOnFocus = function partialOnFocus(ref) {
-    return function (e) {
+    return function () {
       console.log('partial focus');
-      touchedElements.current.set(ref);
+      touchedElements.current.set(ref, null);
       ref.current.onfocus = '';
     };
   };

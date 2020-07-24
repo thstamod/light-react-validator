@@ -1,7 +1,6 @@
+// @ts-nocheck
 import React from 'react'
-
 import { useValidator } from 'light-react-validator'
-import 'light-react-validator/dist/index.css'
 
 const config = {}
 
@@ -14,7 +13,7 @@ const App = () => {
   const submit = () => {
     console.log('submitted')
   }
-  const showErrors = (errors) => {
+  const showErrors = (errors: any) => {
     const t = []
     for (const key in errors) {
       if (errors.hasOwnProperty(key)) {

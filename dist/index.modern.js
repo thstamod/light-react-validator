@@ -19,7 +19,7 @@ const useValidator = config => {
     e.preventDefault();
     console.log('validator formSubmit');
 
-    for (const el of elements) {
+    for (const el in elements.current) {
       fieldValidation(el);
     }
 
@@ -69,7 +69,7 @@ const useValidator = config => {
     console.log(e);
 
     if (!dirtyElements.current.has(ref)) {
-      dirtyElements.current.set(ref);
+      dirtyElements.current.set(ref, null);
       return;
     }
 
@@ -119,21 +119,21 @@ const useValidator = config => {
   const track = (elem, rules) => {
     if (!elem) return;
     const ref = createRef();
-    if (elements.current.has(ref)) return;
     ref.current = elem;
+    ref.current.addEventListener('focus', partialOnFocus(ref));
+    ref.current.addEventListener('input', keyup(ref));
+    if (elements.current.has(ref)) return;
     elements.current.set(elem, {
       valid: true,
       ...(rules && {
         data: rules
       })
     });
-    ref.current.addEventListener('focus', partialOnFocus(ref));
-    ref.current.addEventListener('input', keyup(ref));
   };
 
-  const partialOnFocus = ref => e => {
+  const partialOnFocus = ref => () => {
     console.log('partial focus');
-    touchedElements.current.set(ref);
+    touchedElements.current.set(ref, null);
     ref.current.onfocus = '';
   };
 

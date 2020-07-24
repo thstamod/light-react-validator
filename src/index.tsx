@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useRef, useState, useEffect, createRef } from 'react'
 import builtInValidators from './utils/builtIns'
 
@@ -13,7 +14,7 @@ export const useValidator = (config) => {
   const submitForm = (fn) => (e) => {
     e.preventDefault()
     console.log('validator formSubmit')
-    for (const el of elements) {
+    for (const el in elements.current) {
       fieldValidation(el)
     }
     fn()
@@ -60,7 +61,7 @@ export const useValidator = (config) => {
   const keyup = (ref) => (e) => {
     console.log(e)
     if (!dirtyElements.current.has(ref)) {
-      dirtyElements.current.set(ref)
+      dirtyElements.current.set(ref, null)
       return
     }
     console.log(e)
@@ -111,18 +112,15 @@ export const useValidator = (config) => {
   const track = (elem, rules) => {
     if (!elem) return
     const ref = createRef()
+    ref.current = elem
+    ref.current.addEventListener('focus', partialOnFocus(ref))
+    ref.current.addEventListener('input', keyup(ref))
     if (elements.current.has(ref)) return
 
-    ref.current = elem
     elements.current.set(elem, {
       valid: true,
       ...(rules && { data: rules })
     })
-    // ref.current.onchange = keyup(ref)
-    // ref.current.onchange = partialOnChange(ref)
-    // ref.current.onfocus = partialOnFocus(ref)
-    ref.current.addEventListener('focus', partialOnFocus(ref))
-    ref.current.addEventListener('input', keyup(ref))
   }
 
   // const partialOnChange = (ref) => (e) => {
@@ -130,9 +128,9 @@ export const useValidator = (config) => {
   //   ref.current.onchange = ''
   // }
 
-  const partialOnFocus = (ref) => (e) => {
+  const partialOnFocus = (ref) => () => {
     console.log('partial focus')
-    touchedElements.current.set(ref)
+    touchedElements.current.set(ref, null)
     ref.current.onfocus = ''
   }
 
