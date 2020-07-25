@@ -1,59 +1,86 @@
 import { useRef, useState, useEffect, createRef } from 'react';
 
-var builtInValidators = {
-  require: input => input.trim().length > 0,
-  email: input => /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
-  minLen: (input, len) => input.toString().length < len
-};
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
 
-const useValidator = config => {
-  const elements = useRef(new Map());
-  const touchedElements = useRef(new Map());
-  const dirtyElements = useRef(new Map());
-  const errors = useRef({});
-  const customValidators = useRef(null);
-  const [validity, setValidity] = useState(true);
-
-  const submitForm = fn => e => {
-    e.preventDefault();
-    console.log('validator formSubmit');
-
-    for (const el in elements.current) {
-      fieldValidation(elements.current[el]);
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
     }
 
-    fn();
+    return target;
   };
 
-  useEffect(() => {
+  return _extends.apply(this, arguments);
+}
+
+var builtInValidators = {
+  require: function require(input) {
+    return input.trim().length > 0;
+  },
+  email: function email(input) {
+    return /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input);
+  },
+  minLen: function minLen(input, len) {
+    return input.toString().length < len;
+  }
+};
+
+var useValidator = function useValidator(config) {
+  var elements = useRef(new Map());
+  var touchedElements = useRef(new Map());
+  var dirtyElements = useRef(new Map());
+  var errors = useRef({});
+  var customValidators = useRef(null);
+
+  var _useState = useState(true),
+      validity = _useState[0],
+      setValidity = _useState[1];
+
+  var submitForm = function submitForm(fn) {
+    return function (e) {
+      e.preventDefault();
+      console.log('validator formSubmit');
+
+      for (var el in elements.current) {
+        fieldValidation(elements.current[el]);
+      }
+
+      fn();
+    };
+  };
+
+  useEffect(function () {
     if (config === null || config === void 0 ? void 0 : config.customValidators) {
       customValidators.current = config.customValidators;
     }
   }, []);
 
-  const fieldValidation = ref => {
-    let _isValid = true;
-    const {
-      fieldRules
-    } = elements.current.get(ref.current);
-    const validators = getValidators(fieldRules, customValidators.current, builtInValidators);
-    console.log(validators);
-    const {
-      rules,
-      messages
-    } = fieldRules;
+  var fieldValidation = function fieldValidation(ref) {
+    var _isValid = true;
 
-    for (const key in validators) {
+    var _elements$current$get = elements.current.get(ref.current),
+        fieldRules = _elements$current$get.fieldRules;
+
+    var validators = getValidators(fieldRules, customValidators.current, builtInValidators);
+    console.log(validators);
+    var rules = fieldRules.rules,
+        messages = fieldRules.messages;
+
+    for (var key in validators) {
       var _ref$current, _ref$current2;
 
-      const validator = validators[key];
-      const name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
+      var validator = validators[key];
+      var name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
 
       if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.value)) {
-        errors.current[name] = {
-          [key]: messages === null || messages === void 0 ? void 0 : messages[key],
-          ...errors.current[name]
-        };
+        var _extends2;
+
+        errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);
         _isValid = false;
       } else {
         var _errors$current, _errors$current$name;
@@ -67,26 +94,30 @@ const useValidator = config => {
     return _isValid;
   };
 
-  const keyup = ref => e => {
-    if (!dirtyElements.current.has(ref)) {
-      dirtyElements.current.set(ref, null);
-      return;
-    }
+  var keyup = function keyup(ref) {
+    return function (e) {
+      if (!dirtyElements.current.has(ref)) {
+        dirtyElements.current.set(ref, null);
+        return;
+      }
 
-    const v = fieldValidation(ref);
+      var v = fieldValidation(ref);
 
-    if (validity !== v) {
-      setValidity(v => !v);
-    }
+      if (validity !== v) {
+        setValidity(function (v) {
+          return !v;
+        });
+      }
+    };
   };
 
-  const getValidators = (data, configValidators, builtInValidators) => {
+  var getValidators = function getValidators(data, configValidators, builtInValidators) {
     if (!data) return;
-    const f = {};
+    var f = {};
 
-    for (const key in data === null || data === void 0 ? void 0 : data.rules) {
+    for (var key in data === null || data === void 0 ? void 0 : data.rules) {
       console.log(key);
-      const t = checkForValidators(data, configValidators, builtInValidators, key);
+      var t = checkForValidators(data, configValidators, builtInValidators, key);
 
       if (t) {
         f[key] = t;
@@ -96,7 +127,7 @@ const useValidator = config => {
     return f;
   };
 
-  const checkForValidators = (data, configValidators, builtInValidators, name) => {
+  var checkForValidators = function checkForValidators(data, configValidators, builtInValidators, name) {
     var _data$customValidator;
 
     if ((_data$customValidator = data.customValidators) === null || _data$customValidator === void 0 ? void 0 : _data$customValidator[name]) {
@@ -110,30 +141,33 @@ const useValidator = config => {
     if (builtInValidators[name]) {
       return builtInValidators[name];
     } else {
-      throw new Error(`no validation function with mane ${name}`);
+      throw new Error("no validation function with mane " + name);
     }
   };
 
-  const track = (elem, rules) => {
+  var track = function track(elem, rules) {
     if (!elem) return;
-    const ref = createRef();
+    var ref = createRef();
     ref.current = elem;
     ref.current.addEventListener('focus', partialOnFocus(ref));
     ref.current.addEventListener('input', keyup(ref));
     if (elements.current.has(ref)) return;
-    const dataFields = {
-      valid: true,
-      ...(rules && {
-        fieldRules: rules
-      })
-    };
+
+    var dataFields = _extends({
+      valid: true
+    }, rules && {
+      fieldRules: rules
+    });
+
     elements.current.set(elem, dataFields);
   };
 
-  const partialOnFocus = ref => () => {
-    console.log('partial focus');
-    touchedElements.current.set(ref, null);
-    ref.current.onfocus = '';
+  var partialOnFocus = function partialOnFocus(ref) {
+    return function () {
+      console.log('partial focus');
+      touchedElements.current.set(ref, null);
+      ref.current.onfocus = '';
+    };
   };
 
   return {
