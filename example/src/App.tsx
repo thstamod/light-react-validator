@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React from 'react'
 import { useValidator } from 'light-react-validator'
 
@@ -51,11 +50,11 @@ const App = () => {
         id='free'
       />
       <br />
-      <label htmlFor='noatach'>no atach</label>
+      <label htmlFor='noattach'>no attach</label>
       <input
         type='text'
-        id='noatach'
-        onChange={(e) => console.log('noatach ', e.target.value)}
+        id='noattach'
+        onChange={(e) => console.log('noattach ', e.target.value)}
       />
       <br />
 

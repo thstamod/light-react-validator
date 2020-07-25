@@ -1,10 +1,10 @@
 // @ts-nocheck
 import { useRef, useState, useEffect, createRef, RefObject } from 'react'
 import builtInValidators from './utils/builtIns'
-import { Config } from './types/configuration'
+import { Config, IuseValidator } from './types/configuration'
 import { DataField, BasicRefs, Rules } from './types/fields'
 
-export const useValidator = (config?: Config) => {
+export const useValidator = (config?: Config): IuseValidator => {
   const elements = useRef(new Map())
   const touchedElements = useRef(new Map())
   const dirtyElements = useRef(new Map())
@@ -113,7 +113,7 @@ export const useValidator = (config?: Config) => {
     }
   }
 
-  const track = (elem: RefObject<BasicRefs>, rules?: Rules): void => {
+  const track = (elem?: BasicRefs | null, rules?: Rules): void => {
     if (!elem) return
     const ref = createRef()
 
