@@ -31,7 +31,6 @@ var builtInValidators = {
 };
 
 var useValidator = function useValidator(config) {
-  console.log('rerender useValidator');
   var elements = react.useRef(new Map());
   var touchedElements = react.useRef(new Map());
   var dirtyElements = react.useRef(new Map());
@@ -48,7 +47,7 @@ var useValidator = function useValidator(config) {
       console.log('validator formSubmit');
 
       for (var el in elements.current) {
-        fieldValidation(el);
+        fieldValidation(elements.current[el]);
       }
 
       fn();
@@ -56,7 +55,7 @@ var useValidator = function useValidator(config) {
   };
 
   react.useEffect(function () {
-    if (config.customValidators) {
+    if (config === null || config === void 0 ? void 0 : config.customValidators) {
       customValidators.current = config.customValidators;
     }
   }, []);
@@ -65,20 +64,23 @@ var useValidator = function useValidator(config) {
     var _isValid = true;
 
     var _elements$current$get = elements.current.get(ref.current),
-        data = _elements$current$get.data;
+        fieldRules = _elements$current$get.fieldRules;
 
-    var validators = getValidators(data, customValidators.current, builtInValidators);
-    var rules = data.rules,
-        msgs = data.msgs;
+    var validators = getValidators(fieldRules, customValidators.current, builtInValidators);
+    console.log(validators);
+    var rules = fieldRules.rules,
+        messages = fieldRules.messages;
 
     for (var key in validators) {
-      var validator = validators[key];
-      var name = ref.current.name;
+      var _ref$current, _ref$current2;
 
-      if (rules[key] && !validator(ref.current.value)) {
+      var validator = validators[key];
+      var name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
+
+      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.value)) {
         var _extends2;
 
-        errors.current[name] = _extends((_extends2 = {}, _extends2[key] = msgs === null || msgs === void 0 ? void 0 : msgs[key], _extends2), errors.current[name]);
+        errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);
         _isValid = false;
       } else {
         var _errors$current, _errors$current$name;
@@ -94,14 +96,11 @@ var useValidator = function useValidator(config) {
 
   var keyup = function keyup(ref) {
     return function (e) {
-      console.log(e);
-
       if (!dirtyElements.current.has(ref)) {
         dirtyElements.current.set(ref, null);
         return;
       }
 
-      console.log(e);
       var v = fieldValidation(ref);
 
       if (validity !== v) {
@@ -119,7 +118,6 @@ var useValidator = function useValidator(config) {
     for (var key in data === null || data === void 0 ? void 0 : data.rules) {
       console.log(key);
       var t = checkForValidators(data, configValidators, builtInValidators, key);
-      console.log(t);
 
       if (t) {
         f[key] = t;
@@ -154,11 +152,14 @@ var useValidator = function useValidator(config) {
     ref.current.addEventListener('focus', partialOnFocus(ref));
     ref.current.addEventListener('input', keyup(ref));
     if (elements.current.has(ref)) return;
-    elements.current.set(elem, _extends({
+
+    var dataFields = _extends({
       valid: true
     }, rules && {
-      data: rules
-    }));
+      fieldRules: rules
+    });
+
+    elements.current.set(elem, dataFields);
   };
 
   var partialOnFocus = function partialOnFocus(ref) {
@@ -169,7 +170,11 @@ var useValidator = function useValidator(config) {
     };
   };
 
-  return [track, submitForm, errors.current];
+  return {
+    track: track,
+    submitForm: submitForm,
+    errors: errors.current
+  };
 };
 
 exports.useValidator = useValidator;

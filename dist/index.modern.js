@@ -7,7 +7,6 @@ var builtInValidators = {
 };
 
 const useValidator = config => {
-  console.log('rerender useValidator');
   const elements = useRef(new Map());
   const touchedElements = useRef(new Map());
   const dirtyElements = useRef(new Map());
@@ -20,14 +19,14 @@ const useValidator = config => {
     console.log('validator formSubmit');
 
     for (const el in elements.current) {
-      fieldValidation(el);
+      fieldValidation(elements.current[el]);
     }
 
     fn();
   };
 
   useEffect(() => {
-    if (config.customValidators) {
+    if (config === null || config === void 0 ? void 0 : config.customValidators) {
       customValidators.current = config.customValidators;
     }
   }, []);
@@ -35,21 +34,24 @@ const useValidator = config => {
   const fieldValidation = ref => {
     let _isValid = true;
     const {
-      data
+      fieldRules
     } = elements.current.get(ref.current);
-    const validators = getValidators(data, customValidators.current, builtInValidators);
+    const validators = getValidators(fieldRules, customValidators.current, builtInValidators);
+    console.log(validators);
     const {
       rules,
-      msgs
-    } = data;
+      messages
+    } = fieldRules;
 
     for (const key in validators) {
-      const validator = validators[key];
-      const name = ref.current.name;
+      var _ref$current, _ref$current2;
 
-      if (rules[key] && !validator(ref.current.value)) {
+      const validator = validators[key];
+      const name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
+
+      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.value)) {
         errors.current[name] = {
-          [key]: msgs === null || msgs === void 0 ? void 0 : msgs[key],
+          [key]: messages === null || messages === void 0 ? void 0 : messages[key],
           ...errors.current[name]
         };
         _isValid = false;
@@ -66,14 +68,11 @@ const useValidator = config => {
   };
 
   const keyup = ref => e => {
-    console.log(e);
-
     if (!dirtyElements.current.has(ref)) {
       dirtyElements.current.set(ref, null);
       return;
     }
 
-    console.log(e);
     const v = fieldValidation(ref);
 
     if (validity !== v) {
@@ -88,7 +87,6 @@ const useValidator = config => {
     for (const key in data === null || data === void 0 ? void 0 : data.rules) {
       console.log(key);
       const t = checkForValidators(data, configValidators, builtInValidators, key);
-      console.log(t);
 
       if (t) {
         f[key] = t;
@@ -123,12 +121,13 @@ const useValidator = config => {
     ref.current.addEventListener('focus', partialOnFocus(ref));
     ref.current.addEventListener('input', keyup(ref));
     if (elements.current.has(ref)) return;
-    elements.current.set(elem, {
+    const dataFields = {
       valid: true,
       ...(rules && {
-        data: rules
+        fieldRules: rules
       })
-    });
+    };
+    elements.current.set(elem, dataFields);
   };
 
   const partialOnFocus = ref => () => {
@@ -137,7 +136,11 @@ const useValidator = config => {
     ref.current.onfocus = '';
   };
 
-  return [track, submitForm, errors.current];
+  return {
+    track: track,
+    submitForm: submitForm,
+    errors: errors.current
+  };
 };
 
 export { useValidator };
