@@ -68,6 +68,8 @@ const useValidator = config => {
   };
 
   const keyup = ref => e => {
+    console.log(e);
+
     if (!dirtyElements.current.has(ref)) {
       dirtyElements.current.set(ref, null);
       return;
@@ -118,8 +120,8 @@ const useValidator = config => {
     if (!elem) return;
     const ref = createRef();
     ref.current = elem;
-    ref.current.addEventListener('focus', partialOnFocus(ref));
-    ref.current.addEventListener('input', keyup(ref));
+    ref.current && ref.current.addEventListener('focus', partialOnFocus(ref));
+    ref.current && ref.current.addEventListener('input', keyup(ref));
     if (elements.current.has(ref)) return;
     const dataFields = {
       valid: true,
@@ -133,7 +135,7 @@ const useValidator = config => {
   const partialOnFocus = ref => () => {
     console.log('partial focus');
     touchedElements.current.set(ref, null);
-    ref.current.onfocus = '';
+    ref.current && ref.current.removeEventListener('focus', partialOnFocus(ref), true);
   };
 
   return {

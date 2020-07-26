@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { useRef, useState, useEffect, createRef, RefObject } from 'react'
 import builtInValidators from './utils/builtIns'
 import { Config, UseValidator } from './types/configuration'
@@ -62,6 +61,7 @@ export const useValidator = (config?: Config): UseValidator => {
   }
 
   const keyup = (ref: RefObject<BasicRefs>) => (e: Event) => {
+    console.log(e)
     if (!dirtyElements.current.has(ref)) {
       dirtyElements.current.set(ref, null)
       return
@@ -113,13 +113,12 @@ export const useValidator = (config?: Config): UseValidator => {
     }
   }
 
-  const track = (elem?: BasicRefs | null, rules?: Rules): void => {
+  const track = (elem?: BasicRefs, rules?: Rules): void => {
     if (!elem) return
-    const ref = createRef()
-
-    ref.current = elem
-    ref.current.addEventListener('focus', partialOnFocus(ref))
-    ref.current.addEventListener('input', keyup(ref))
+    const ref = createRef<BasicRefs>()
+    ;(ref as React.MutableRefObject<BasicRefs>).current = elem
+    ref.current && ref.current.addEventListener('focus', partialOnFocus(ref))
+    ref.current && ref.current.addEventListener('input', keyup(ref))
     if (elements.current.has(ref)) return
 
     const dataFields: DataField = {
@@ -130,10 +129,11 @@ export const useValidator = (config?: Config): UseValidator => {
     elements.current.set(elem, dataFields)
   }
 
-  const partialOnFocus = (ref) => () => {
+  const partialOnFocus = (ref: RefObject<BasicRefs>) => () => {
     console.log('partial focus')
     touchedElements.current.set(ref, null)
-    ref.current.onfocus = ''
+    ref.current &&
+      ref.current.removeEventListener('focus', partialOnFocus(ref), true)
   }
 
   return { track: track, submitForm: submitForm, errors: errors.current }
