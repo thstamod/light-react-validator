@@ -3,7 +3,7 @@ export type DataField = {
   fieldRules?: Rules
 }
 
-export interface BasicRefs extends HTMLInputElement {
+export type BasicRefs = HTMLInputElement & {
   name: string
   value: any
 }

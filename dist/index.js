@@ -72,12 +72,12 @@ var useValidator = function useValidator(config) {
         messages = fieldRules.messages;
 
     for (var key in validators) {
-      var _ref$current, _ref$current2;
+      var _ref$current;
 
       var validator = validators[key];
-      var name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
+      var name = ref.current.name;
 
-      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.value)) {
+      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.value)) {
         var _extends2;
 
         errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);

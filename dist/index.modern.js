@@ -44,12 +44,12 @@ const useValidator = config => {
     } = fieldRules;
 
     for (const key in validators) {
-      var _ref$current, _ref$current2;
+      var _ref$current;
 
       const validator = validators[key];
-      const name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
+      const name = ref.current.name;
 
-      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.value)) {
+      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.value)) {
         errors.current[name] = {
           [key]: messages === null || messages === void 0 ? void 0 : messages[key],
           ...errors.current[name]

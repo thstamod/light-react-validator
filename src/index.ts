@@ -1,10 +1,10 @@
 // @ts-nocheck
 import { useRef, useState, useEffect, createRef, RefObject } from 'react'
 import builtInValidators from './utils/builtIns'
-import { Config, IuseValidator } from './types/configuration'
+import { Config, UseValidator } from './types/configuration'
 import { DataField, BasicRefs, Rules } from './types/fields'
 
-export const useValidator = (config?: Config): IuseValidator => {
+export const useValidator = (config?: Config): UseValidator => {
   const elements = useRef(new Map())
   const touchedElements = useRef(new Map())
   const dirtyElements = useRef(new Map())
@@ -45,7 +45,7 @@ export const useValidator = (config?: Config): IuseValidator => {
     const { rules, messages } = fieldRules
     for (const key in validators) {
       const validator = validators[key]
-      const name = ref.current?.name
+      const name = ref.current!.name
       if (rules[key] && !validator(ref?.current?.value)) {
         errors.current[name] = {
           [key]: messages?.[key],
