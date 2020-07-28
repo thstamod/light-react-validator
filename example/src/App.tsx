@@ -22,6 +22,7 @@ const App = () => {
     }
     return t
   }
+
   return (
     <form onSubmit={(e) => submitForm(submit)(e)}>
       <label htmlFor='email'>email</label>
@@ -42,13 +43,19 @@ const App = () => {
       <br />
       <label htmlFor='free'>free</label>
       <input
-        ref={(elem) => track(elem)}
+        ref={(elem) =>
+          track(elem, {
+            rules: { require: true },
+            messages: { require: 'free is required' }
+          })
+        }
         name='free'
         onChange={(e) => console.log('original onChange ', e.target.value)}
         onFocus={(e) => console.log('original onfocus ', e.target.value)}
         type='text'
         id='free'
       />
+      {errors?.free && showErrors(errors.free)}
       <br />
       <label htmlFor='noattach'>no attach</label>
       <input

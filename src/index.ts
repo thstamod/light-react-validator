@@ -2,6 +2,9 @@ import { useRef, useState, useEffect, createRef, RefObject } from 'react'
 import builtInValidators from './utils/builtIns'
 import { Config, UseValidator } from './types/configuration'
 import { DataField, BasicRefs, Rules } from './types/fields'
+import { getValidators } from './logic/checkValidators'
+import { hasNameAttribute } from './logic/checkers'
+import { isEmpty } from './logic/genericFunctions'
 
 export const useValidator = (config?: Config): UseValidator => {
   const elements = useRef(new Map())
@@ -9,7 +12,8 @@ export const useValidator = (config?: Config): UseValidator => {
   const dirtyElements = useRef(new Map())
   const errors = useRef({})
   const customValidators = useRef(null)
-  const [validity, setValidity] = useState(true)
+  // const validity = useRef(true)
+  const [, rerender] = useState()
 
   const submitForm = (fn: Function) => (e: Event) => {
     e.preventDefault()
@@ -26,114 +30,74 @@ export const useValidator = (config?: Config): UseValidator => {
     }
   }, [])
 
-  // const beforeSubmit = () => {
-  //   // TODO: run all inputs before submit
-  // }
-
-  const fieldValidation = (ref: RefObject<BasicRefs>) => {
+  const fieldValidation = (ref: RefObject<BasicRefs>): void => {
+    const prev = elements.current.get(ref.current)
+    // const shouldRerender = false
     let _isValid = true
-    const { fieldRules } = elements.current.get(ref.current)
-    // eslint-disable-next-line no-debugger
-    // debugger
-    const validators = getValidators(
-      fieldRules,
-      customValidators.current,
-      builtInValidators
-    )
-    console.log(validators)
+    const { fieldRules, validators } = elements.current.get(ref.current)
     const { rules, messages } = fieldRules
     for (const key in validators) {
       const validator = validators[key]
-      const name = ref.current!.name
+      const name = hasNameAttribute(ref)
       if (rules[key] && !validator(ref?.current?.value)) {
         errors.current[name] = {
           [key]: messages?.[key],
           ...errors.current[name]
         }
+        elements.current.set(ref.current, { ...prev, valid: false })
         _isValid = false
       } else {
-        console.log(errors.current[name])
         delete errors.current?.[name]?.[key]
+        isEmpty(errors.current?.[name]) && delete errors.current?.[name]
+        errors.current = { ...errors.current }
+        elements.current.set(ref.current, { ...prev, valid: true })
         _isValid = true
       }
     }
-    return _isValid
+    console.log(_isValid)
+    if (prev !== elements.current.get(ref.current)) {
+      // validity.current = !validity.current
+      rerender({})
+    }
+    // return _isValid
   }
 
-  const keyup = (ref: RefObject<BasicRefs>) => (e: Event) => {
-    console.log(e)
+  const detectInput = (ref: RefObject<BasicRefs>) => (e: Event) => {
+    e.stopPropagation()
     if (!dirtyElements.current.has(ref)) {
       dirtyElements.current.set(ref, null)
       return
     }
-    const v = fieldValidation(ref)
-    if (validity !== v) {
-      setValidity((v) => !v)
-    }
-  }
-
-  const getValidators = (
-    data: Rules,
-    configValidators: Config | null,
-    builtInValidators: object
-  ) => {
-    if (!data) return
-    const f = {}
-    for (const key in data?.rules) {
-      console.log(key)
-      const t = checkForValidators(
-        data,
-        configValidators,
-        builtInValidators,
-        key
-      )
-      if (t) {
-        f[key] = t
-      }
-    }
-    return f
-  }
-
-  const checkForValidators = (
-    data: Rules,
-    configValidators: Config | null,
-    builtInValidators: any,
-    name: string
-  ) => {
-    if (data.customValidators?.[name]) {
-      return data.customValidators[name]
-    }
-    if (configValidators?.[name]) {
-      return configValidators[name]
-    }
-    if (builtInValidators[name]) {
-      return builtInValidators[name]
-    } else {
-      throw new Error(`no validation function with mane ${name}`)
-    }
+    fieldValidation(ref)
   }
 
   const track = (elem?: BasicRefs, rules?: Rules): void => {
     if (!elem) return
     const ref = createRef<BasicRefs>()
     ;(ref as React.MutableRefObject<BasicRefs>).current = elem
-    ref.current && ref.current.addEventListener('focus', partialOnFocus(ref))
-    ref.current && ref.current.addEventListener('input', keyup(ref))
-    if (elements.current.has(ref)) return
+    if (elements.current.has(ref.current)) return
+    ref.current && ref.current.addEventListener('focus', detectTouch(ref))
+    ref.current && ref.current.addEventListener('input', detectInput(ref))
+
+    const validators = getValidators(
+      customValidators.current,
+      builtInValidators,
+      rules
+    )
 
     const dataFields: DataField = {
       valid: true,
-      ...(rules && { fieldRules: rules })
+      ...(rules && { fieldRules: rules }),
+      ...(validators && { validators })
     }
-
-    elements.current.set(elem, dataFields)
+    console.log(elements)
+    elements.current.set(ref.current, dataFields)
   }
 
-  const partialOnFocus = (ref: RefObject<BasicRefs>) => () => {
-    console.log('partial focus')
+  const detectTouch = (ref: RefObject<BasicRefs>) => () => {
     touchedElements.current.set(ref, null)
     ref.current &&
-      ref.current.removeEventListener('focus', partialOnFocus(ref), true)
+      ref.current.removeEventListener('focus', detectTouch(ref), true)
   }
 
   return { track: track, submitForm: submitForm, errors: errors.current }
