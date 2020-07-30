@@ -12,14 +12,22 @@ export const useValidator = (config?: Config): UseValidator => {
   const dirtyElements = useRef(new Map())
   const errors = useRef({})
   const customValidators = useRef(null)
-  // const validity = useRef(true)
+  const formValidity = useRef(true)
   const [, rerender] = useState()
 
   const submitForm = (fn: Function) => (e: Event) => {
     e.preventDefault()
-    console.log('validator formSubmit')
-    for (const el in elements.current) {
-      fieldValidation(elements.current[el])
+    const prevFormValidity = formValidity.current
+    if (elements.current.size !== dirtyElements.current.size) {
+      dirtyElements.current.clear()
+      dirtyElements.current = elements.current
+    }
+    elements.current.forEach((_value: object, key: BasicRefs) => {
+      fieldValidation(key)
+    })
+    if (formValidity.current !== prevFormValidity) {
+      rerender({})
+      return
     }
     fn()
   }
@@ -30,45 +38,47 @@ export const useValidator = (config?: Config): UseValidator => {
     }
   }, [])
 
-  const fieldValidation = (ref: RefObject<BasicRefs>): void => {
-    const prev = elements.current.get(ref.current)
-    // const shouldRerender = false
-    let _isValid = true
-    const { fieldRules, validators } = elements.current.get(ref.current)
+  const fieldValidation = (ref: BasicRefs): void => {
+    const prev = elements.current.get(ref)
+    const { fieldRules, validators } = elements.current.get(ref)
     const { rules, messages } = fieldRules
     for (const key in validators) {
       const validator = validators[key]
       const name = hasNameAttribute(ref)
-      if (rules[key] && !validator(ref?.current?.value)) {
+      if (rules[key] && !validator(ref?.value)) {
         errors.current[name] = {
           [key]: messages?.[key],
           ...errors.current[name]
         }
-        elements.current.set(ref.current, { ...prev, valid: false })
-        _isValid = false
+        elements.current.set(ref, { ...prev, valid: false })
       } else {
         delete errors.current?.[name]?.[key]
-        isEmpty(errors.current?.[name]) && delete errors.current?.[name]
-        errors.current = { ...errors.current }
-        elements.current.set(ref.current, { ...prev, valid: true })
-        _isValid = true
+        if (!isEmpty(errors?.current) && isEmpty(errors?.current?.[name])) {
+          isEmpty(errors.current?.[name]) && delete errors.current?.[name]
+          errors.current = { ...errors.current }
+          elements.current.set(ref, { ...prev, valid: true })
+        }
       }
     }
-    console.log(_isValid)
-    if (prev !== elements.current.get(ref.current)) {
-      // validity.current = !validity.current
+    if (!elements.current.get(ref).valid && formValidity) {
+      formValidity.current = false
+    }
+    if (prev !== elements.current.get(ref)) {
       rerender({})
     }
-    // return _isValid
   }
 
   const detectInput = (ref: RefObject<BasicRefs>) => (e: Event) => {
     e.stopPropagation()
-    if (!dirtyElements.current.has(ref)) {
-      dirtyElements.current.set(ref, null)
+    if (!dirtyElements.current.has(ref.current)) {
+      dirtyElements.current.set(ref.current, null)
       return
     }
-    fieldValidation(ref)
+    fieldValidation(ref.current!)
+    if (!formValidity.current) {
+      formValidity.current = true
+      rerender({})
+    }
   }
 
   const track = (elem?: BasicRefs, rules?: Rules): void => {
@@ -90,7 +100,6 @@ export const useValidator = (config?: Config): UseValidator => {
       ...(rules && { fieldRules: rules }),
       ...(validators && { validators })
     }
-    console.log(elements)
     elements.current.set(ref.current, dataFields)
   }
 
@@ -100,5 +109,10 @@ export const useValidator = (config?: Config): UseValidator => {
       ref.current.removeEventListener('focus', detectTouch(ref), true)
   }
 
-  return { track: track, submitForm: submitForm, errors: errors.current }
+  return {
+    track: track,
+    submitForm: submitForm,
+    errors: errors.current,
+    formValidity: formValidity.current
+  }
 }

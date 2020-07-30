@@ -1,12 +1,36 @@
 import { useRef, useState, useEffect, createRef } from 'react';
 
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
 var builtInValidators = {
-  require: input => input.trim().length > 0,
-  email: input => /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
-  minLen: (input, len) => input.toString().length < len
+  require: function require(input) {
+    return input.trim().length > 0;
+  },
+  email: function email(input) {
+    return /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input);
+  },
+  minLen: function minLen(input, len) {
+    return input.toString().length < len;
+  }
 };
 
-const checkForValidators = (configValidators, builtInValidators, name, data) => {
+var checkForValidators = function checkForValidators(configValidators, builtInValidators, name, data) {
   var _data$customValidator;
 
   if (data === null || data === void 0 ? void 0 : (_data$customValidator = data.customValidators) === null || _data$customValidator === void 0 ? void 0 : _data$customValidator[name]) {
@@ -20,16 +44,16 @@ const checkForValidators = (configValidators, builtInValidators, name, data) => 
   if (builtInValidators[name]) {
     return builtInValidators[name];
   } else {
-    throw new Error(`no validation function with mane ${name}`);
+    throw new Error("no validation function with mane " + name);
   }
 };
 
-const getValidators = (configValidators, builtInValidators, data) => {
+var getValidators = function getValidators(configValidators, builtInValidators, data) {
   if (!data) return;
-  const f = {};
+  var f = {};
 
-  for (const key in data === null || data === void 0 ? void 0 : data.rules) {
-    const t = checkForValidators(configValidators, builtInValidators, key, data);
+  for (var key in data === null || data === void 0 ? void 0 : data.rules) {
+    var t = checkForValidators(configValidators, builtInValidators, key, data);
 
     if (t) {
       f[key] = t;
@@ -39,19 +63,17 @@ const getValidators = (configValidators, builtInValidators, data) => {
   return f;
 };
 
-const hasNameAttribute = ref => {
-  const name = ref.current.name;
+var hasNameAttribute = function hasNameAttribute(ref) {
+  var name = ref.name;
 
   if (name) {
     return name;
   } else {
-    var _ref$current;
-
-    throw new Error(`the field ${(_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.outerHTML} must have a unique name attribute`);
+    throw new Error("the field " + ref.outerHTML + " must have a unique name attribute");
   }
 };
 
-const isEmpty = o => {
+var isEmpty = function isEmpty(o) {
   if (Array.isArray(o)) {
     return !o.length;
   }
@@ -59,120 +81,143 @@ const isEmpty = o => {
   return Object.keys(o).length === 0 && o.constructor === Object;
 };
 
-const useValidator = config => {
-  const elements = useRef(new Map());
-  const touchedElements = useRef(new Map());
-  const dirtyElements = useRef(new Map());
-  const errors = useRef({});
-  const customValidators = useRef(null);
-  const [, rerender] = useState();
+var useValidator = function useValidator(config) {
+  var elements = useRef(new Map());
+  var touchedElements = useRef(new Map());
+  var dirtyElements = useRef(new Map());
+  var errors = useRef({});
+  var customValidators = useRef(null);
+  var formValidity = useRef(true);
 
-  const submitForm = fn => e => {
-    e.preventDefault();
-    console.log('validator formSubmit');
+  var _useState = useState(),
+      rerender = _useState[1];
 
-    for (const el in elements.current) {
-      fieldValidation(elements.current[el]);
-    }
+  var submitForm = function submitForm(fn) {
+    return function (e) {
+      e.preventDefault();
+      var prevFormValidity = formValidity.current;
 
-    fn();
+      if (elements.current.size !== dirtyElements.current.size) {
+        dirtyElements.current.clear();
+        dirtyElements.current = elements.current;
+      }
+
+      elements.current.forEach(function (_value, key) {
+        fieldValidation(key);
+      });
+
+      if (formValidity.current !== prevFormValidity) {
+        rerender({});
+        return;
+      }
+
+      fn();
+    };
   };
 
-  useEffect(() => {
+  useEffect(function () {
     if (config === null || config === void 0 ? void 0 : config.customValidators) {
       customValidators.current = config.customValidators;
     }
   }, []);
 
-  const fieldValidation = ref => {
-    const prev = elements.current.get(ref.current);
-    let _isValid = true;
-    const {
-      fieldRules,
-      validators
-    } = elements.current.get(ref.current);
-    const {
-      rules,
-      messages
-    } = fieldRules;
+  var fieldValidation = function fieldValidation(ref) {
+    var prev = elements.current.get(ref);
 
-    for (const key in validators) {
-      var _ref$current;
+    var _elements$current$get = elements.current.get(ref),
+        fieldRules = _elements$current$get.fieldRules,
+        validators = _elements$current$get.validators;
 
-      const validator = validators[key];
-      const name = hasNameAttribute(ref);
+    var rules = fieldRules.rules,
+        messages = fieldRules.messages;
 
-      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.value)) {
-        errors.current[name] = {
-          [key]: messages === null || messages === void 0 ? void 0 : messages[key],
-          ...errors.current[name]
-        };
-        elements.current.set(ref.current, { ...prev,
+    for (var key in validators) {
+      var validator = validators[key];
+      var name = hasNameAttribute(ref);
+
+      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
+        var _extends2;
+
+        errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);
+        elements.current.set(ref, _extends({}, prev, {
           valid: false
-        });
-        _isValid = false;
+        }));
       } else {
-        var _errors$current, _errors$current$name, _errors$current2, _errors$current3;
+        var _errors$current, _errors$current$name, _errors$current2;
 
         (_errors$current = errors.current) === null || _errors$current === void 0 ? true : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? true : delete _errors$current$name[key];
-        isEmpty((_errors$current2 = errors.current) === null || _errors$current2 === void 0 ? void 0 : _errors$current2[name]) && ((_errors$current3 = errors.current) === null || _errors$current3 === void 0 ? true : delete _errors$current3[name]);
-        errors.current = { ...errors.current
-        };
-        elements.current.set(ref.current, { ...prev,
-          valid: true
-        });
-        _isValid = true;
+
+        if (!isEmpty(errors === null || errors === void 0 ? void 0 : errors.current) && isEmpty(errors === null || errors === void 0 ? void 0 : (_errors$current2 = errors.current) === null || _errors$current2 === void 0 ? void 0 : _errors$current2[name])) {
+          var _errors$current3, _errors$current4;
+
+          isEmpty((_errors$current3 = errors.current) === null || _errors$current3 === void 0 ? void 0 : _errors$current3[name]) && ((_errors$current4 = errors.current) === null || _errors$current4 === void 0 ? true : delete _errors$current4[name]);
+          errors.current = _extends({}, errors.current);
+          elements.current.set(ref, _extends({}, prev, {
+            valid: true
+          }));
+        }
       }
     }
 
-    console.log(_isValid);
+    if (!elements.current.get(ref).valid && formValidity) {
+      formValidity.current = false;
+    }
 
-    if (prev !== elements.current.get(ref.current)) {
+    if (prev !== elements.current.get(ref)) {
       rerender({});
     }
   };
 
-  const detectInput = ref => e => {
-    e.stopPropagation();
+  var detectInput = function detectInput(ref) {
+    return function (e) {
+      e.stopPropagation();
 
-    if (!dirtyElements.current.has(ref)) {
-      dirtyElements.current.set(ref, null);
-      return;
-    }
+      if (!dirtyElements.current.has(ref.current)) {
+        dirtyElements.current.set(ref.current, null);
+        return;
+      }
 
-    fieldValidation(ref);
+      fieldValidation(ref.current);
+
+      if (!formValidity.current) {
+        formValidity.current = true;
+        rerender({});
+      }
+    };
   };
 
-  const track = (elem, rules) => {
+  var track = function track(elem, rules) {
     if (!elem) return;
-    const ref = createRef();
+    var ref = createRef();
     ref.current = elem;
     if (elements.current.has(ref.current)) return;
     ref.current && ref.current.addEventListener('focus', detectTouch(ref));
     ref.current && ref.current.addEventListener('input', detectInput(ref));
-    const validators = getValidators(customValidators.current, builtInValidators, rules);
-    const dataFields = {
-      valid: true,
-      ...(rules && {
-        fieldRules: rules
-      }),
-      ...(validators && {
-        validators
-      })
-    };
-    console.log(elements);
+    var validators = getValidators(customValidators.current, builtInValidators, rules);
+
+    var dataFields = _extends({
+      valid: true
+    }, rules && {
+      fieldRules: rules
+    }, validators && {
+      validators: validators
+    });
+
     elements.current.set(ref.current, dataFields);
   };
 
-  const detectTouch = ref => () => {
-    touchedElements.current.set(ref, null);
-    ref.current && ref.current.removeEventListener('focus', detectTouch(ref), true);
+  var detectTouch = function detectTouch(ref) {
+    return function () {
+      touchedElements.current.set(ref, null);
+      ref.current && ref.current.removeEventListener('focus', detectTouch(ref), true);
+    };
   };
 
   return {
     track: track,
     submitForm: submitForm,
-    errors: errors.current
+    errors: errors.current,
+    formValidity: formValidity.current
   };
 };
 

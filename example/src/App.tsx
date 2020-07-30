@@ -5,7 +5,7 @@ const config = {}
 
 const App = () => {
   console.log('rerender')
-  const { track, submitForm, errors } = useValidator(config)
+  const { track, submitForm, errors, formValidity } = useValidator(config)
 
   console.log('ERRORS', errors)
 
@@ -29,8 +29,8 @@ const App = () => {
       <input
         ref={(elem) =>
           track(elem, {
-            rules: { require: true },
-            messages: { require: 'email is required' }
+            rules: { require: true, email: true },
+            messages: { require: 'email is required', email: 'is not an email' }
           })
         }
         name='email'
@@ -65,7 +65,9 @@ const App = () => {
       />
       <br />
 
-      <button type='submit'>submit</button>
+      <button disabled={!formValidity} type='submit'>
+        submit
+      </button>
     </form>
   )
 }

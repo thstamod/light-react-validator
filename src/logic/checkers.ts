@@ -1,13 +1,13 @@
-import { RefObject } from 'react'
+// import { RefObject } from 'react'
 import { BasicRefs } from '../types/fields'
 
-export const hasNameAttribute = (ref: RefObject<BasicRefs>) => {
-  const name = ref.current!.name
+export const hasNameAttribute = (ref: BasicRefs) => {
+  const name = ref.name
   if (name) {
     return name
   } else {
     throw new Error(
-      `the field ${ref.current?.outerHTML} must have a unique name attribute`
+      `the field ${ref.outerHTML} must have a unique name attribute`
     )
   }
 }

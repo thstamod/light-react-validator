@@ -64,14 +64,12 @@ var getValidators = function getValidators(configValidators, builtInValidators, 
 };
 
 var hasNameAttribute = function hasNameAttribute(ref) {
-  var name = ref.current.name;
+  var name = ref.name;
 
   if (name) {
     return name;
   } else {
-    var _ref$current;
-
-    throw new Error("the field " + ((_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.outerHTML) + " must have a unique name attribute");
+    throw new Error("the field " + ref.outerHTML + " must have a unique name attribute");
   }
 };
 
@@ -89,6 +87,7 @@ var useValidator = function useValidator(config) {
   var dirtyElements = react.useRef(new Map());
   var errors = react.useRef({});
   var customValidators = react.useRef(null);
+  var formValidity = react.useRef(true);
 
   var _useState = react.useState(),
       rerender = _useState[1];
@@ -96,10 +95,20 @@ var useValidator = function useValidator(config) {
   var submitForm = function submitForm(fn) {
     return function (e) {
       e.preventDefault();
-      console.log('validator formSubmit');
+      var prevFormValidity = formValidity.current;
 
-      for (var el in elements.current) {
-        fieldValidation(elements.current[el]);
+      if (elements.current.size !== dirtyElements.current.size) {
+        dirtyElements.current.clear();
+        dirtyElements.current = elements.current;
+      }
+
+      elements.current.forEach(function (_value, key) {
+        fieldValidation(key);
+      });
+
+      if (formValidity.current !== prevFormValidity) {
+        rerender({});
+        return;
       }
 
       fn();
@@ -113,10 +122,9 @@ var useValidator = function useValidator(config) {
   }, []);
 
   var fieldValidation = function fieldValidation(ref) {
-    var prev = elements.current.get(ref.current);
-    var _isValid = true;
+    var prev = elements.current.get(ref);
 
-    var _elements$current$get = elements.current.get(ref.current),
+    var _elements$current$get = elements.current.get(ref),
         fieldRules = _elements$current$get.fieldRules,
         validators = _elements$current$get.validators;
 
@@ -124,35 +132,38 @@ var useValidator = function useValidator(config) {
         messages = fieldRules.messages;
 
     for (var key in validators) {
-      var _ref$current;
-
       var validator = validators[key];
       var name = hasNameAttribute(ref);
 
-      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.value)) {
+      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
         var _extends2;
 
         errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);
-        elements.current.set(ref.current, _extends({}, prev, {
+        elements.current.set(ref, _extends({}, prev, {
           valid: false
         }));
-        _isValid = false;
       } else {
-        var _errors$current, _errors$current$name, _errors$current2, _errors$current3;
+        var _errors$current, _errors$current$name, _errors$current2;
 
         (_errors$current = errors.current) === null || _errors$current === void 0 ? true : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? true : delete _errors$current$name[key];
-        isEmpty((_errors$current2 = errors.current) === null || _errors$current2 === void 0 ? void 0 : _errors$current2[name]) && ((_errors$current3 = errors.current) === null || _errors$current3 === void 0 ? true : delete _errors$current3[name]);
-        errors.current = _extends({}, errors.current);
-        elements.current.set(ref.current, _extends({}, prev, {
-          valid: true
-        }));
-        _isValid = true;
+
+        if (!isEmpty(errors === null || errors === void 0 ? void 0 : errors.current) && isEmpty(errors === null || errors === void 0 ? void 0 : (_errors$current2 = errors.current) === null || _errors$current2 === void 0 ? void 0 : _errors$current2[name])) {
+          var _errors$current3, _errors$current4;
+
+          isEmpty((_errors$current3 = errors.current) === null || _errors$current3 === void 0 ? void 0 : _errors$current3[name]) && ((_errors$current4 = errors.current) === null || _errors$current4 === void 0 ? true : delete _errors$current4[name]);
+          errors.current = _extends({}, errors.current);
+          elements.current.set(ref, _extends({}, prev, {
+            valid: true
+          }));
+        }
       }
     }
 
-    console.log(_isValid);
+    if (!elements.current.get(ref).valid && formValidity) {
+      formValidity.current = false;
+    }
 
-    if (prev !== elements.current.get(ref.current)) {
+    if (prev !== elements.current.get(ref)) {
       rerender({});
     }
   };
@@ -161,12 +172,17 @@ var useValidator = function useValidator(config) {
     return function (e) {
       e.stopPropagation();
 
-      if (!dirtyElements.current.has(ref)) {
-        dirtyElements.current.set(ref, null);
+      if (!dirtyElements.current.has(ref.current)) {
+        dirtyElements.current.set(ref.current, null);
         return;
       }
 
-      fieldValidation(ref);
+      fieldValidation(ref.current);
+
+      if (!formValidity.current) {
+        formValidity.current = true;
+        rerender({});
+      }
     };
   };
 
@@ -187,7 +203,6 @@ var useValidator = function useValidator(config) {
       validators: validators
     });
 
-    console.log(elements);
     elements.current.set(ref.current, dataFields);
   };
 
@@ -201,7 +216,8 @@ var useValidator = function useValidator(config) {
   return {
     track: track,
     submitForm: submitForm,
-    errors: errors.current
+    errors: errors.current,
+    formValidity: formValidity.current
   };
 };
 

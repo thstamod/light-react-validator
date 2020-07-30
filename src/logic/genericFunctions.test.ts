@@ -1,6 +1,6 @@
 import { isEmpty } from './genericFunctions'
 
-describe('useValidator', () => {
+describe('isEmpty function', () => {
   test('is empty array', () => {
     expect(isEmpty([])).toBe(true)
   })
