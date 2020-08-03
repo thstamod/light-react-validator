@@ -87,7 +87,9 @@ var useValidator = function useValidator(config) {
   var dirtyElements = react.useRef(new Map());
   var errors = react.useRef({});
   var customValidators = react.useRef(null);
+  var customConfiguration = react.useRef({});
   var formValidity = react.useRef(true);
+  var shouldRerender = react.useRef(false);
 
   var _useState = react.useState(),
       rerender = _useState[1];
@@ -98,8 +100,7 @@ var useValidator = function useValidator(config) {
       var prevFormValidity = formValidity.current;
 
       if (elements.current.size !== dirtyElements.current.size) {
-        dirtyElements.current.clear();
-        dirtyElements.current = elements.current;
+        dirtyElements.current = new Map(elements.current);
       }
 
       elements.current.forEach(function (_value, key) {
@@ -119,10 +120,14 @@ var useValidator = function useValidator(config) {
     if (config === null || config === void 0 ? void 0 : config.customValidators) {
       customValidators.current = config.customValidators;
     }
+
+    if (config === null || config === void 0 ? void 0 : config.validateFormOnSubmit) {
+      customConfiguration.current.validateFormOnSubmit = true;
+    }
   }, []);
 
   var fieldValidation = function fieldValidation(ref) {
-    var prev = elements.current.get(ref);
+    var name = hasNameAttribute(ref);
 
     var _elements$current$get = elements.current.get(ref),
         fieldRules = _elements$current$get.fieldRules,
@@ -133,37 +138,49 @@ var useValidator = function useValidator(config) {
 
     for (var key in validators) {
       var validator = validators[key];
-      var name = hasNameAttribute(ref);
 
       if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
-        var _extends2;
+        var _errors$current, _errors$current$name;
 
-        errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);
-        elements.current.set(ref, _extends({}, prev, {
+        if ((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? void 0 : _errors$current$name[key]) continue;
+        shouldRerender.current = true;
+
+        if (name in errors.current) {
+          errors.current[name][key] = messages === null || messages === void 0 ? void 0 : messages[key];
+        } else {
+          var _extends2;
+
+          errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);
+        }
+
+        elements.current.set(ref, _extends({}, elements.current.get(ref), {
           valid: false
         }));
       } else {
-        var _errors$current, _errors$current$name, _errors$current2;
+        var _errors$current2, _errors$current2$name, _errors$current3, _errors$current3$name, _errors$current4;
 
-        (_errors$current = errors.current) === null || _errors$current === void 0 ? true : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? true : delete _errors$current$name[key];
+        if (!((_errors$current2 = errors.current) === null || _errors$current2 === void 0 ? void 0 : (_errors$current2$name = _errors$current2[name]) === null || _errors$current2$name === void 0 ? void 0 : _errors$current2$name[key])) continue;
+        shouldRerender.current = true;
+        (_errors$current3 = errors.current) === null || _errors$current3 === void 0 ? true : (_errors$current3$name = _errors$current3[name]) === null || _errors$current3$name === void 0 ? true : delete _errors$current3$name[key];
 
-        if (!isEmpty(errors === null || errors === void 0 ? void 0 : errors.current) && isEmpty(errors === null || errors === void 0 ? void 0 : (_errors$current2 = errors.current) === null || _errors$current2 === void 0 ? void 0 : _errors$current2[name])) {
-          var _errors$current3, _errors$current4;
+        if (!isEmpty(errors === null || errors === void 0 ? void 0 : errors.current) && isEmpty(errors === null || errors === void 0 ? void 0 : (_errors$current4 = errors.current) === null || _errors$current4 === void 0 ? void 0 : _errors$current4[name])) {
+          var _errors$current5, _errors$current6;
 
-          isEmpty((_errors$current3 = errors.current) === null || _errors$current3 === void 0 ? void 0 : _errors$current3[name]) && ((_errors$current4 = errors.current) === null || _errors$current4 === void 0 ? true : delete _errors$current4[name]);
+          isEmpty((_errors$current5 = errors.current) === null || _errors$current5 === void 0 ? void 0 : _errors$current5[name]) && ((_errors$current6 = errors.current) === null || _errors$current6 === void 0 ? true : delete _errors$current6[name]);
           errors.current = _extends({}, errors.current);
-          elements.current.set(ref, _extends({}, prev, {
+          elements.current.set(ref, _extends({}, elements.current.get(ref), {
             valid: true
           }));
         }
       }
     }
 
-    if (!elements.current.get(ref).valid && formValidity) {
+    if (!elements.current.get(ref).valid && formValidity && !customConfiguration.current.validateFormOnSubmit) {
       formValidity.current = false;
     }
 
-    if (prev !== elements.current.get(ref)) {
+    if (shouldRerender.current) {
+      shouldRerender.current = false;
       rerender({});
     }
   };
@@ -174,15 +191,9 @@ var useValidator = function useValidator(config) {
 
       if (!dirtyElements.current.has(ref.current)) {
         dirtyElements.current.set(ref.current, null);
-        return;
       }
 
       fieldValidation(ref.current);
-
-      if (!formValidity.current) {
-        formValidity.current = true;
-        rerender({});
-      }
     };
   };
 

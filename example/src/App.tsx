@@ -1,6 +1,7 @@
 import React from 'react'
 import { useValidator } from 'light-react-validator'
 
+// const config = { validateFormOnSubmit: true }
 const config = {}
 
 const App = () => {

@@ -2,6 +2,7 @@ import { BasicRefs, Rules } from './fields'
 
 export type Config = {
   customValidators?: any
+  validateFormOnSubmit?: boolean
 }
 
 export type UseValidator = {

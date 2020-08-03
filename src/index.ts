@@ -12,15 +12,16 @@ export const useValidator = (config?: Config): UseValidator => {
   const dirtyElements = useRef(new Map())
   const errors = useRef({})
   const customValidators = useRef(null)
+  const customConfiguration = useRef<any>({})
   const formValidity = useRef(true)
+  const shouldRerender = useRef(false)
   const [, rerender] = useState()
 
   const submitForm = (fn: Function) => (e: Event) => {
     e.preventDefault()
     const prevFormValidity = formValidity.current
     if (elements.current.size !== dirtyElements.current.size) {
-      dirtyElements.current.clear()
-      dirtyElements.current = elements.current
+      dirtyElements.current = new Map(elements.current)
     }
     elements.current.forEach((_value: object, key: BasicRefs) => {
       fieldValidation(key)
@@ -36,49 +37,73 @@ export const useValidator = (config?: Config): UseValidator => {
     if (config?.customValidators) {
       customValidators.current = config.customValidators
     }
+    if (config?.validateFormOnSubmit) {
+      customConfiguration.current.validateFormOnSubmit = true
+    }
   }, [])
 
   const fieldValidation = (ref: BasicRefs): void => {
-    const prev = elements.current.get(ref)
+    const name = hasNameAttribute(ref)
     const { fieldRules, validators } = elements.current.get(ref)
     const { rules, messages } = fieldRules
     for (const key in validators) {
       const validator = validators[key]
-      const name = hasNameAttribute(ref)
       if (rules[key] && !validator(ref?.value)) {
-        errors.current[name] = {
-          [key]: messages?.[key],
-          ...errors.current[name]
+        if (errors.current?.[name]?.[key]) continue
+        shouldRerender.current = true
+        if (name in errors.current) {
+          errors.current[name][key] = messages?.[key]
+        } else {
+          errors.current[name] = {
+            [key]: messages?.[key],
+            ...errors.current[name]
+          }
         }
-        elements.current.set(ref, { ...prev, valid: false })
+        elements.current.set(ref, {
+          ...elements.current.get(ref),
+          valid: false
+        })
       } else {
+        if (!errors.current?.[name]?.[key]) continue
+        shouldRerender.current = true
         delete errors.current?.[name]?.[key]
         if (!isEmpty(errors?.current) && isEmpty(errors?.current?.[name])) {
           isEmpty(errors.current?.[name]) && delete errors.current?.[name]
           errors.current = { ...errors.current }
-          elements.current.set(ref, { ...prev, valid: true })
+          elements.current.set(ref, {
+            ...elements.current.get(ref),
+            valid: true
+          })
         }
       }
     }
-    if (!elements.current.get(ref).valid && formValidity) {
+    if (
+      !elements.current.get(ref).valid &&
+      formValidity &&
+      !customConfiguration.current.validateFormOnSubmit
+    ) {
       formValidity.current = false
     }
-    if (prev !== elements.current.get(ref)) {
+
+    if (shouldRerender.current) {
+      shouldRerender.current = false
       rerender({})
     }
   }
 
   const detectInput = (ref: RefObject<BasicRefs>) => (e: Event) => {
     e.stopPropagation()
+    //  const prev = formValidity.current
     if (!dirtyElements.current.has(ref.current)) {
       dirtyElements.current.set(ref.current, null)
-      return
+      // return
     }
     fieldValidation(ref.current!)
-    if (!formValidity.current) {
-      formValidity.current = true
-      rerender({})
-    }
+    // // TODO: not working correctly. updates on every change
+    // if (!formValidity.current && !prev) {
+    //   formValidity.current = true
+    //  rerender({})
+    // }
   }
 
   const track = (elem?: BasicRefs, rules?: Rules): void => {
