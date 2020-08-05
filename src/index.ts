@@ -13,6 +13,7 @@ export const useValidator = (config?: Config): UseValidator => {
   const errors = useRef({})
   const customValidators = useRef(null)
   const customConfiguration = useRef<any>({})
+  const triedToSubmit = useRef(false)
   const formValidity = useRef(true)
   const shouldRerender = useRef(false)
   const [, rerender] = useState()
@@ -26,6 +27,8 @@ export const useValidator = (config?: Config): UseValidator => {
     elements.current.forEach((_value: object, key: BasicRefs) => {
       fieldValidation(key)
     })
+    triedToSubmit.current = true
+
     if (formValidity.current !== prevFormValidity) {
       rerender({})
       return
@@ -43,12 +46,14 @@ export const useValidator = (config?: Config): UseValidator => {
   }, [])
 
   const fieldValidation = (ref: BasicRefs): void => {
+    let _isValid = true
     const name = hasNameAttribute(ref)
     const { fieldRules, validators } = elements.current.get(ref)
     const { rules, messages } = fieldRules
     for (const key in validators) {
       const validator = validators[key]
       if (rules[key] && !validator(ref?.value)) {
+        _isValid = false
         if (errors.current?.[name]?.[key]) continue
         shouldRerender.current = true
         if (name in errors.current) {
@@ -77,12 +82,15 @@ export const useValidator = (config?: Config): UseValidator => {
         }
       }
     }
-    if (
-      !elements.current.get(ref).valid &&
-      formValidity &&
-      !customConfiguration.current.validateFormOnSubmit
-    ) {
+    // eslint-disable-next-line no-debugger
+    // debugger
+    if (!_isValid) {
       formValidity.current = false
+    }
+
+    if (isEmpty(errors.current)) {
+      shouldRerender.current = true
+      formValidity.current = true
     }
 
     if (shouldRerender.current) {
@@ -93,17 +101,15 @@ export const useValidator = (config?: Config): UseValidator => {
 
   const detectInput = (ref: RefObject<BasicRefs>) => (e: Event) => {
     e.stopPropagation()
-    //  const prev = formValidity.current
     if (!dirtyElements.current.has(ref.current)) {
       dirtyElements.current.set(ref.current, null)
-      // return
     }
+    if (
+      !triedToSubmit.current &&
+      customConfiguration.current.validateFormOnSubmit
+    )
+      return
     fieldValidation(ref.current!)
-    // // TODO: not working correctly. updates on every change
-    // if (!formValidity.current && !prev) {
-    //   formValidity.current = true
-    //  rerender({})
-    // }
   }
 
   const track = (elem?: BasicRefs, rules?: Rules): void => {

@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect, createRef } from 'react';
 
 var builtInValidators = {
-  require: input => input.trim().length > 0,
+  required: input => input.trim().length > 0,
   email: input => /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
   minLen: (input, len) => input.toString().length < len
 };
@@ -64,6 +64,7 @@ const useValidator = config => {
   const errors = useRef({});
   const customValidators = useRef(null);
   const customConfiguration = useRef({});
+  const triedToSubmit = useRef(false);
   const formValidity = useRef(true);
   const shouldRerender = useRef(false);
   const [, rerender] = useState();
@@ -79,6 +80,7 @@ const useValidator = config => {
     elements.current.forEach((_value, key) => {
       fieldValidation(key);
     });
+    triedToSubmit.current = true;
 
     if (formValidity.current !== prevFormValidity) {
       rerender({});
@@ -99,6 +101,7 @@ const useValidator = config => {
   }, []);
 
   const fieldValidation = ref => {
+    let _isValid = true;
     const name = hasNameAttribute(ref);
     const {
       fieldRules,
@@ -115,6 +118,7 @@ const useValidator = config => {
       if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
         var _errors$current, _errors$current$name;
 
+        _isValid = false;
         if ((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? void 0 : _errors$current$name[key]) continue;
         shouldRerender.current = true;
 
@@ -150,8 +154,13 @@ const useValidator = config => {
       }
     }
 
-    if (!elements.current.get(ref).valid && formValidity && !customConfiguration.current.validateFormOnSubmit) {
+    if (!_isValid) {
       formValidity.current = false;
+    }
+
+    if (isEmpty(errors.current)) {
+      shouldRerender.current = true;
+      formValidity.current = true;
     }
 
     if (shouldRerender.current) {
@@ -167,6 +176,7 @@ const useValidator = config => {
       dirtyElements.current.set(ref.current, null);
     }
 
+    if (!triedToSubmit.current && customConfiguration.current.validateFormOnSubmit) return;
     fieldValidation(ref.current);
   };
 

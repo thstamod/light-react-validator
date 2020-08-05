@@ -19,7 +19,7 @@ function _extends() {
 }
 
 var builtInValidators = {
-  require: function require(input) {
+  required: function required(input) {
     return input.trim().length > 0;
   },
   email: function email(input) {
@@ -88,6 +88,7 @@ var useValidator = function useValidator(config) {
   var errors = react.useRef({});
   var customValidators = react.useRef(null);
   var customConfiguration = react.useRef({});
+  var triedToSubmit = react.useRef(false);
   var formValidity = react.useRef(true);
   var shouldRerender = react.useRef(false);
 
@@ -106,6 +107,7 @@ var useValidator = function useValidator(config) {
       elements.current.forEach(function (_value, key) {
         fieldValidation(key);
       });
+      triedToSubmit.current = true;
 
       if (formValidity.current !== prevFormValidity) {
         rerender({});
@@ -127,6 +129,7 @@ var useValidator = function useValidator(config) {
   }, []);
 
   var fieldValidation = function fieldValidation(ref) {
+    var _isValid = true;
     var name = hasNameAttribute(ref);
 
     var _elements$current$get = elements.current.get(ref),
@@ -142,6 +145,7 @@ var useValidator = function useValidator(config) {
       if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
         var _errors$current, _errors$current$name;
 
+        _isValid = false;
         if ((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? void 0 : _errors$current$name[key]) continue;
         shouldRerender.current = true;
 
@@ -175,8 +179,13 @@ var useValidator = function useValidator(config) {
       }
     }
 
-    if (!elements.current.get(ref).valid && formValidity && !customConfiguration.current.validateFormOnSubmit) {
+    if (!_isValid) {
       formValidity.current = false;
+    }
+
+    if (isEmpty(errors.current)) {
+      shouldRerender.current = true;
+      formValidity.current = true;
     }
 
     if (shouldRerender.current) {
@@ -193,6 +202,7 @@ var useValidator = function useValidator(config) {
         dirtyElements.current.set(ref.current, null);
       }
 
+      if (!triedToSubmit.current && customConfiguration.current.validateFormOnSubmit) return;
       fieldValidation(ref.current);
     };
   };

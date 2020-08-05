@@ -1,14 +1,15 @@
 import React from 'react'
 import { useValidator } from 'light-react-validator'
 
-// const config = { validateFormOnSubmit: true }
-const config = {}
+const config = { validateFormOnSubmit: true }
+// const config = {}
 
 const App = () => {
   console.log('rerender')
   const { track, submitForm, errors, formValidity } = useValidator(config)
 
   console.log('ERRORS', errors)
+  console.log('FORMVALIDITY', formValidity)
 
   const submit = () => {
     console.log('submitted')
@@ -30,8 +31,11 @@ const App = () => {
       <input
         ref={(elem) =>
           track(elem, {
-            rules: { require: true, email: true },
-            messages: { require: 'email is required', email: 'is not an email' }
+            rules: { required: true, email: true },
+            messages: {
+              required: 'email is required',
+              email: 'is not an email'
+            }
           })
         }
         name='email'
@@ -46,8 +50,8 @@ const App = () => {
       <input
         ref={(elem) =>
           track(elem, {
-            rules: { require: true },
-            messages: { require: 'free is required' }
+            rules: { required: true },
+            messages: { required: 'free is required' }
           })
         }
         name='free'

@@ -27,8 +27,8 @@ describe('useValidator individual inputs', () => {
             type='text'
             ref={(elem) =>
               track(elem, {
-                rules: { require: true },
-                messages: { require: 'email is required' }
+                rules: { required: true },
+                messages: { required: 'email is required' }
               })
             }
           />
@@ -41,7 +41,7 @@ describe('useValidator individual inputs', () => {
     fireEvent.input(input, { target: { value: 'Good Day' } })
     fireEvent.input(input, { target: { value: '' } })
     const res = gErrors
-    expect(res.email.require).toBe('email is required')
+    expect(res.email.required).toBe('email is required')
   })
   test('error is disappeared after not empty field', () => {
     let gErrors = {}
@@ -57,8 +57,8 @@ describe('useValidator individual inputs', () => {
             type='text'
             ref={(elem) =>
               track(elem, {
-                rules: { require: true },
-                messages: { require: 'email is required' }
+                rules: { required: true },
+                messages: { required: 'email is required' }
               })
             }
           />
@@ -88,9 +88,9 @@ describe('useValidator individual inputs', () => {
             type='text'
             ref={(elem) =>
               track(elem, {
-                rules: { require: true, email: true },
+                rules: { required: true, email: true },
                 messages: {
-                  require: 'email is required',
+                  required: 'email is required',
                   email: 'is not an email'
                 }
               })
@@ -120,9 +120,9 @@ describe('useValidator individual inputs', () => {
             type='text'
             ref={(elem) =>
               track(elem, {
-                rules: { require: true, email: true },
+                rules: { required: true, email: true },
                 messages: {
-                  require: 'email is required',
+                  required: 'email is required',
                   email: 'is not an email'
                 }
               })
@@ -140,7 +140,7 @@ describe('useValidator individual inputs', () => {
     fireEvent.input(input, { target: { value: '' } })
     res = gErrors
     expect(res).toEqual({
-      email: { require: 'email is required', email: 'is not an email' }
+      email: { required: 'email is required', email: 'is not an email' }
     })
   })
 })
@@ -162,9 +162,9 @@ describe('useValidator form', () => {
             type='text'
             ref={(elem) =>
               track(elem, {
-                rules: { require: true, email: true },
+                rules: { required: true, email: true },
                 messages: {
-                  require: 'email is required',
+                  required: 'email is required',
                   email: 'is not an email'
                 }
               })
@@ -198,9 +198,9 @@ describe('useValidator form', () => {
             type='text'
             ref={(elem) =>
               track(elem, {
-                rules: { require: true, email: true },
+                rules: { required: true, email: true },
                 messages: {
-                  require: 'email is required',
+                  required: 'email is required',
                   email: 'is not an email'
                 }
               })
@@ -233,9 +233,9 @@ describe('useValidator form', () => {
             type='text'
             ref={(elem) =>
               track(elem, {
-                rules: { require: true, email: true },
+                rules: { required: true, email: true },
                 messages: {
-                  require: 'email is required',
+                  required: 'email is required',
                   email: 'is not an email'
                 }
               })
@@ -253,11 +253,11 @@ describe('useValidator form', () => {
     fireEvent.click(submitBtn)
     const res = gErrors
     expect(res).toEqual({
-      email: { require: 'email is required', email: 'is not an email' }
+      email: { required: 'email is required', email: 'is not an email' }
     })
     expect(gFormValidity).toBe(false)
   })
-  test('after fixing errors should be able to resubmit the form', () => {
+  test('after fixing errors should be able to resubmit the form (one element)', () => {
     let gErrors = {}
     let gFormValidity = null
     const Component = () => {
@@ -273,9 +273,9 @@ describe('useValidator form', () => {
             type='text'
             ref={(elem) =>
               track(elem, {
-                rules: { require: true, email: true },
+                rules: { required: true, email: true },
                 messages: {
-                  require: 'email is required',
+                  required: 'email is required',
                   email: 'is not an email'
                 }
               })
@@ -299,5 +299,225 @@ describe('useValidator form', () => {
     fireEvent.input(input, { target: { value: 'Gaw@mail.com' } })
     expect(res).toEqual({})
     expect(gFormValidity).toBe(true)
+  })
+  test('after submitting the form fix an error you able to resubmit with errors', () => {
+    let gErrors = {}
+    let gFormValidity = null
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not an email'
+                }
+              })
+            }
+          />
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'free is required'
+                }
+              })
+            }
+          />
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const email = t.getByLabelText('email')
+
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+
+    expect(gErrors).toEqual({
+      email: { email: 'is not an email', required: 'email is required' },
+      free: { required: 'free is required' }
+    })
+
+    expect(gFormValidity).toBe(false)
+
+    fireEvent.input(email, { target: { value: 'Ga@mail.com' } })
+    expect(gErrors).toEqual({
+      free: { required: 'free is required' }
+    })
+    expect(gFormValidity).toBe(false)
+  })
+  test('after successful submit it runs the success submit callback', () => {
+    let gFormValidity = null
+    const successSubmit = jest.fn()
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(successSubmit)(e)}>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not an email'
+                }
+              })
+            }
+          />
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'free is required'
+                }
+              })
+            }
+          />
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const email = t.getByLabelText('email')
+    const free = t.getByLabelText('free')
+    fireEvent.input(email, { target: { value: 'Ga@mail.com' } })
+    fireEvent.input(free, { target: { value: 'Ga' } })
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(true)
+    expect(successSubmit).toBeCalled()
+  })
+  test('after unsuccessful submit it not runs the success submit callback', () => {
+    let gFormValidity = null
+    const successSubmit = jest.fn()
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(successSubmit)(e)}>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not an email'
+                }
+              })
+            }
+          />
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'free is required'
+                }
+              })
+            }
+          />
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const email = t.getByLabelText('email')
+    const free = t.getByLabelText('free')
+    fireEvent.input(email, { target: { value: 'Ga@mail.com' } })
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(false)
+    expect(successSubmit).not.toBeCalled()
+  })
+  test('after unsuccessful submit, fixing the errors and it runs the success submit callback', () => {
+    let gFormValidity = null
+    const successSubmit = jest.fn()
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(successSubmit)(e)}>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not an email'
+                }
+              })
+            }
+          />
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'free is required'
+                }
+              })
+            }
+          />
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const email = t.getByLabelText('email')
+    const free = t.getByLabelText('free')
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(false)
+    fireEvent.input(email, { target: { value: 'Ga@mail.com' } })
+    fireEvent.input(free, { target: { value: 'Ga' } })
+
+    fireEvent.click(submitBtn)
+
+    expect(successSubmit).toBeCalled()
   })
 })
