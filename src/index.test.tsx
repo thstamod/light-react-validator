@@ -520,4 +520,106 @@ describe('useValidator form', () => {
 
     expect(successSubmit).toBeCalled()
   })
+
+  test('should call console.worn when ref name is undefined', () => {
+    process.env.NODE_ENV = 'development'
+    const mockConsoleWarn = jest
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {})
+
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      return (
+        <div>
+          <input
+            id='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not an email'
+                }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    render(<Component />)
+    expect(mockConsoleWarn).toHaveBeenCalled()
+  })
+})
+
+describe('useValidator form', () => {
+  test('input type radio is required', () => {
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors } = useValidator()
+      gErrors = errors
+      return (
+        <div>
+          <div>
+            <input
+              type='radio'
+              id='huey'
+              name='drone'
+              value='huey'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'radio is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='huey'>Huey</label>
+          </div>
+
+          <div>
+            <input
+              type='radio'
+              id='dewey'
+              name='drone'
+              value='dewey'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'radio is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='dewey'>Dewey</label>
+          </div>
+
+          <div>
+            <input
+              type='radio'
+              id='louie'
+              name='drone'
+              value='louie'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'radio is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='louie'>Louie</label>
+          </div>
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    return false
+  })
 })

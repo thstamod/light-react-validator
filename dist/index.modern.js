@@ -45,8 +45,19 @@ const hasNameAttribute = ref => {
   if (name) {
     return name;
   } else {
-    throw new Error(`the field ${ref.outerHTML} must have a unique name attribute`);
+    console.warn(`the field ${ref.outerHTML} must have a unique name attribute`);
+    return undefined;
   }
+};
+
+const isRadio = ref => ref.type === 'radio';
+
+const findElementsWithSameName = (elements, name) => {
+  const sn = [];
+  elements.current.forEach((value, key) => {
+    value.name === name && sn.push(key);
+  });
+  return sn.length ? sn : null;
 };
 
 const isEmpty = o => {
@@ -102,54 +113,56 @@ const useValidator = config => {
 
   const fieldValidation = ref => {
     let _isValid = true;
-    const name = hasNameAttribute(ref);
     const {
       fieldRules,
-      validators
-    } = elements.current.get(ref);
+      validators,
+      name
+    } = elements.current.get(ref) || {};
     const {
       rules,
       messages
-    } = fieldRules;
+    } = fieldRules || {};
 
-    for (const key in validators) {
-      const validator = validators[key];
+    if (rules && name) {
+      for (const key in validators) {
+        const validator = validators[key];
 
-      if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
-        var _errors$current, _errors$current$name;
+        if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
+          var _errors$current, _errors$current$name;
 
-        _isValid = false;
-        if ((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? void 0 : _errors$current$name[key]) continue;
-        shouldRerender.current = true;
+          _isValid = false;
+          if ((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? void 0 : _errors$current$name[key]) continue;
+          shouldRerender.current = true;
 
-        if (name in errors.current) {
-          errors.current[name][key] = messages === null || messages === void 0 ? void 0 : messages[key];
-        } else {
-          errors.current[name] = {
-            [key]: messages === null || messages === void 0 ? void 0 : messages[key],
-            ...errors.current[name]
-          };
-        }
+          if (name in errors.current) {
+            errors.current[name][key] = messages === null || messages === void 0 ? void 0 : messages[key];
+          } else {
+            errors.current[name] = {
+              [key]: messages === null || messages === void 0 ? void 0 : messages[key],
+              ...errors.current[name]
+            };
+          }
 
-        elements.current.set(ref, { ...elements.current.get(ref),
-          valid: false
-        });
-      } else {
-        var _errors$current2, _errors$current2$name, _errors$current3, _errors$current3$name, _errors$current4;
-
-        if (!((_errors$current2 = errors.current) === null || _errors$current2 === void 0 ? void 0 : (_errors$current2$name = _errors$current2[name]) === null || _errors$current2$name === void 0 ? void 0 : _errors$current2$name[key])) continue;
-        shouldRerender.current = true;
-        (_errors$current3 = errors.current) === null || _errors$current3 === void 0 ? true : (_errors$current3$name = _errors$current3[name]) === null || _errors$current3$name === void 0 ? true : delete _errors$current3$name[key];
-
-        if (!isEmpty(errors === null || errors === void 0 ? void 0 : errors.current) && isEmpty(errors === null || errors === void 0 ? void 0 : (_errors$current4 = errors.current) === null || _errors$current4 === void 0 ? void 0 : _errors$current4[name])) {
-          var _errors$current5, _errors$current6;
-
-          isEmpty((_errors$current5 = errors.current) === null || _errors$current5 === void 0 ? void 0 : _errors$current5[name]) && ((_errors$current6 = errors.current) === null || _errors$current6 === void 0 ? true : delete _errors$current6[name]);
-          errors.current = { ...errors.current
-          };
           elements.current.set(ref, { ...elements.current.get(ref),
-            valid: true
+            valid: false
           });
+        } else {
+          var _errors$current2, _errors$current2$name, _errors$current3, _errors$current3$name, _errors$current4;
+
+          if (!((_errors$current2 = errors.current) === null || _errors$current2 === void 0 ? void 0 : (_errors$current2$name = _errors$current2[name]) === null || _errors$current2$name === void 0 ? void 0 : _errors$current2$name[key])) continue;
+          shouldRerender.current = true;
+          (_errors$current3 = errors.current) === null || _errors$current3 === void 0 ? true : (_errors$current3$name = _errors$current3[name]) === null || _errors$current3$name === void 0 ? true : delete _errors$current3$name[key];
+
+          if (!isEmpty(errors === null || errors === void 0 ? void 0 : errors.current) && isEmpty(errors === null || errors === void 0 ? void 0 : (_errors$current4 = errors.current) === null || _errors$current4 === void 0 ? void 0 : _errors$current4[name])) {
+            var _errors$current5, _errors$current6;
+
+            isEmpty((_errors$current5 = errors.current) === null || _errors$current5 === void 0 ? void 0 : _errors$current5[name]) && ((_errors$current6 = errors.current) === null || _errors$current6 === void 0 ? true : delete _errors$current6[name]);
+            errors.current = { ...errors.current
+            };
+            elements.current.set(ref, { ...elements.current.get(ref),
+              valid: true
+            });
+          }
         }
       }
     }
@@ -180,14 +193,34 @@ const useValidator = config => {
     fieldValidation(ref.current);
   };
 
+  const detectChange = ref => e => {
+    var _ref$current;
+
+    e.stopPropagation();
+    const name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
+
+    if (isRadio(ref.current) && name) {
+      console.log(findElementsWithSameName(elements, name));
+    }
+  };
+
   const track = (elem, rules) => {
+    var _ref$current2, _ref$current3;
+
     if (!elem) return;
     const ref = createRef();
     ref.current = elem;
-    if (elements.current.has(ref.current)) return;
-    ref.current && ref.current.addEventListener('focus', detectTouch(ref));
-    ref.current && ref.current.addEventListener('input', detectInput(ref));
+
+    if (((_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.type) === 'radio') {
+      ref.current && ref.current.addEventListener('change', detectChange(ref));
+    } else {
+      if (elements.current.has(ref.current)) return;
+      ref.current && ref.current.addEventListener('focus', detectTouch(ref));
+      ref.current && ref.current.addEventListener('input', detectInput(ref));
+    }
+
     const validators = getValidators(customValidators.current, builtInValidators, rules);
+    const name = hasNameAttribute(ref.current);
     const dataFields = {
       valid: true,
       ...(rules && {
@@ -195,6 +228,14 @@ const useValidator = config => {
       }),
       ...(validators && {
         validators
+      }),
+      type: (_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type,
+      name: name,
+      ...(isRadio(ref.current) && {
+        checked: false
+      }),
+      ...(isRadio(ref.current) && {
+        group: []
       })
     };
     elements.current.set(ref.current, dataFields);

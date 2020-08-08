@@ -1,8 +1,8 @@
 import React from 'react'
 import { useValidator } from 'light-react-validator'
 
-const config = { validateFormOnSubmit: true }
-// const config = {}
+// const config = { validateFormOnSubmit: true }
+const config = {}
 
 const App = () => {
   console.log('rerender')
@@ -69,7 +69,60 @@ const App = () => {
         onChange={(e) => console.log('noattach ', e.target.value)}
       />
       <br />
+      <div>
+        <input
+          type='radio'
+          id='huey'
+          name='drone'
+          value='huey'
+          ref={(elem) =>
+            track(elem, {
+              rules: { required: true },
+              messages: {
+                required: 'radio is required'
+              }
+            })
+          }
+        />
+        <label htmlFor='huey'>Huey</label>
+      </div>
 
+      <div>
+        <input
+          type='radio'
+          id='dewey'
+          name='drone'
+          value='dewey'
+          ref={(elem) =>
+            track(elem, {
+              rules: { required: true },
+              messages: {
+                required: 'radio is required'
+              }
+            })
+          }
+        />
+        <label htmlFor='dewey'>Dewey</label>
+      </div>
+
+      <div>
+        <input
+          type='radio'
+          id='louie'
+          name='drone'
+          value='louie'
+          ref={(elem) =>
+            track(elem, {
+              rules: { required: true },
+              messages: {
+                required: 'radio is required'
+              }
+            })
+          }
+        />
+        <label htmlFor='louie'>Louie</label>
+      </div>
+      <br />
       <button disabled={!formValidity} type='submit'>
         submit
       </button>

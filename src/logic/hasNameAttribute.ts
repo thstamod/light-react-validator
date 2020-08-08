@@ -6,8 +6,7 @@ export const hasNameAttribute = (ref: BasicRefs) => {
   if (name) {
     return name
   } else {
-    throw new Error(
-      `the field ${ref.outerHTML} must have a unique name attribute`
-    )
+    console.warn(`the field ${ref.outerHTML} must have a unique name attribute`)
+    return undefined
   }
 }

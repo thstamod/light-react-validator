@@ -3,11 +3,13 @@ import builtInValidators from './utils/builtIns'
 import { Config, UseValidator } from './types/configuration'
 import { DataField, BasicRefs, Rules } from './types/fields'
 import { getValidators } from './logic/checkValidators'
-import { hasNameAttribute } from './logic/checkers'
+import { hasNameAttribute } from './logic/hasNameAttribute'
+import { isRadio } from './logic/isRadio'
+import { findElementsWithSameName } from './logic/findElementsWithSameName'
 import { isEmpty } from './logic/genericFunctions'
 
 export const useValidator = (config?: Config): UseValidator => {
-  const elements = useRef(new Map())
+  const elements = useRef<Map<BasicRefs, DataField>>(new Map())
   const touchedElements = useRef(new Map())
   const dirtyElements = useRef(new Map())
   const errors = useRef({})
@@ -24,7 +26,7 @@ export const useValidator = (config?: Config): UseValidator => {
     if (elements.current.size !== dirtyElements.current.size) {
       dirtyElements.current = new Map(elements.current)
     }
-    elements.current.forEach((_value: object, key: BasicRefs) => {
+    elements.current.forEach((_value: DataField, key: BasicRefs) => {
       fieldValidation(key)
     })
     triedToSubmit.current = true
@@ -47,43 +49,42 @@ export const useValidator = (config?: Config): UseValidator => {
 
   const fieldValidation = (ref: BasicRefs): void => {
     let _isValid = true
-    const name = hasNameAttribute(ref)
-    const { fieldRules, validators } = elements.current.get(ref)
-    const { rules, messages } = fieldRules
-    for (const key in validators) {
-      const validator = validators[key]
-      if (rules[key] && !validator(ref?.value)) {
-        _isValid = false
-        if (errors.current?.[name]?.[key]) continue
-        shouldRerender.current = true
-        if (name in errors.current) {
-          errors.current[name][key] = messages?.[key]
-        } else {
-          errors.current[name] = {
-            [key]: messages?.[key],
-            ...errors.current[name]
+    const { fieldRules, validators, name } = elements.current.get(ref) || {}
+    const { rules, messages } = fieldRules || {}
+    if (rules && name) {
+      for (const key in validators) {
+        const validator = validators[key]
+        if (rules[key] && !validator(ref?.value)) {
+          _isValid = false
+          if (errors.current?.[name]?.[key]) continue
+          shouldRerender.current = true
+          if (name in errors.current) {
+            errors.current[name][key] = messages?.[key]
+          } else {
+            errors.current[name] = {
+              [key]: messages?.[key],
+              ...errors.current[name]
+            }
           }
-        }
-        elements.current.set(ref, {
-          ...elements.current.get(ref),
-          valid: false
-        })
-      } else {
-        if (!errors.current?.[name]?.[key]) continue
-        shouldRerender.current = true
-        delete errors.current?.[name]?.[key]
-        if (!isEmpty(errors?.current) && isEmpty(errors?.current?.[name])) {
-          isEmpty(errors.current?.[name]) && delete errors.current?.[name]
-          errors.current = { ...errors.current }
           elements.current.set(ref, {
-            ...elements.current.get(ref),
-            valid: true
+            ...(elements.current.get(ref) as DataField),
+            valid: false
           })
+        } else {
+          if (!errors.current?.[name]?.[key]) continue
+          shouldRerender.current = true
+          delete errors.current?.[name]?.[key]
+          if (!isEmpty(errors?.current) && isEmpty(errors?.current?.[name])) {
+            isEmpty(errors.current?.[name]) && delete errors.current?.[name]
+            errors.current = { ...errors.current }
+            elements.current.set(ref, {
+              ...(elements.current.get(ref) as DataField),
+              valid: true
+            })
+          }
         }
       }
     }
-    // eslint-disable-next-line no-debugger
-    // debugger
     if (!_isValid) {
       formValidity.current = false
     }
@@ -112,26 +113,43 @@ export const useValidator = (config?: Config): UseValidator => {
     fieldValidation(ref.current!)
   }
 
+  const detectChange = (ref: RefObject<BasicRefs>) => (e: Event) => {
+    e.stopPropagation()
+    const name = ref.current?.name
+    if (isRadio(ref.current!) && name) {
+      console.log(findElementsWithSameName(elements, name))
+    }
+  }
+
   const track = (elem?: BasicRefs, rules?: Rules): void => {
     if (!elem) return
     const ref = createRef<BasicRefs>()
     ;(ref as React.MutableRefObject<BasicRefs>).current = elem
-    if (elements.current.has(ref.current)) return
-    ref.current && ref.current.addEventListener('focus', detectTouch(ref))
-    ref.current && ref.current.addEventListener('input', detectInput(ref))
-
+    // console.log(ref)
+    if (ref.current?.type === 'radio') {
+      ref.current && ref.current.addEventListener('change', detectChange(ref))
+    } else {
+      if (elements.current.has(ref.current!)) return
+      ref.current && ref.current.addEventListener('focus', detectTouch(ref))
+      ref.current && ref.current.addEventListener('input', detectInput(ref))
+    }
     const validators = getValidators(
       customValidators.current,
       builtInValidators,
       rules
     )
-
+    const name = hasNameAttribute(ref.current!)
     const dataFields: DataField = {
       valid: true,
       ...(rules && { fieldRules: rules }),
-      ...(validators && { validators })
+      ...(validators && { validators }),
+      type: ref.current?.type,
+      name: name,
+      ...(isRadio(ref.current!) && { checked: false }),
+      ...(isRadio(ref.current!) && { group: [] })
     }
-    elements.current.set(ref.current, dataFields)
+
+    elements.current.set(ref.current!, dataFields)
   }
 
   const detectTouch = (ref: RefObject<BasicRefs>) => () => {
