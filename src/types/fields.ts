@@ -5,12 +5,12 @@ export type DataField = {
   type: string | undefined
   name: string | undefined
   checked?: boolean
-  group?: BasicRefs[]
+  group?: React.RefObject<HTMLInputElement>[]
+  ref: React.RefObject<HTMLInputElement>
 }
 
-export type BasicRefs = HTMLInputElement & {
+export type BasicRef = {
   name: string
-  value: any
 }
 
 export type Rules = {

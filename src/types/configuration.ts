@@ -1,4 +1,4 @@
-import { BasicRefs, Rules } from './fields'
+import { Rules } from './fields'
 
 export type Config = {
   customValidators?: any
@@ -6,7 +6,7 @@ export type Config = {
 }
 
 export type UseValidator = {
-  track(ref?: BasicRefs | null, rules?: Rules): void
+  track(ref: HTMLInputElement | null, rules?: Rules): void
   submitForm(fn: Function): Function
   errors: any
   formValidity: boolean

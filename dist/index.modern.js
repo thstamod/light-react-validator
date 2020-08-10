@@ -1,7 +1,17 @@
 import { useRef, useState, useEffect, createRef } from 'react';
 
 var builtInValidators = {
-  required: input => input.trim().length > 0,
+  required: value => {
+    if (typeof value === 'string') {
+      return value.trim().length > 0;
+    }
+
+    if (value) {
+      return true;
+    }
+
+    return false;
+  },
   email: input => /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
   minLen: (input, len) => input.toString().length < len
 };
@@ -52,20 +62,24 @@ const hasNameAttribute = ref => {
 
 const isRadio = ref => ref.type === 'radio';
 
-const findElementsWithSameName = (elements, name) => {
-  const sn = [];
-  elements.current.forEach((value, key) => {
-    value.name === name && sn.push(key);
-  });
-  return sn.length ? sn : null;
-};
-
 const isEmpty = o => {
   if (Array.isArray(o)) {
     return !o.length;
   }
 
   return Object.keys(o).length === 0 && o.constructor === Object;
+};
+
+const isCheckbox = ref => ref.type === 'checkbox';
+
+const isArray = a => Array.isArray(a);
+
+const getValue = (v, _type) => {
+  if (isArray(v)) {
+    v.reduce((prev, e) => {
+      return e.current.checked || prev;
+    }, false);
+  }
 };
 
 const useValidator = config => {
@@ -88,8 +102,8 @@ const useValidator = config => {
       dirtyElements.current = new Map(elements.current);
     }
 
-    elements.current.forEach((_value, key) => {
-      fieldValidation(key);
+    elements.current.forEach(value => {
+      fieldValidation(value);
     });
     triedToSubmit.current = true;
 
@@ -110,14 +124,16 @@ const useValidator = config => {
       customConfiguration.current.validateFormOnSubmit = true;
     }
   }, []);
+  useEffect(() => {});
 
-  const fieldValidation = ref => {
+  const fieldValidation = elem => {
     let _isValid = true;
     const {
       fieldRules,
       validators,
-      name
-    } = elements.current.get(ref) || {};
+      name,
+      type
+    } = elements.current.get(elem.name) || {};
     const {
       rules,
       messages
@@ -125,9 +141,12 @@ const useValidator = config => {
 
     if (rules && name) {
       for (const key in validators) {
-        const validator = validators[key];
+        var _elem$ref$current;
 
-        if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
+        const validator = validators[key];
+        const value = type === 'text' ? (_elem$ref$current = elem.ref.current) === null || _elem$ref$current === void 0 ? void 0 : _elem$ref$current.value : getValue(!isEmpty(elem.group) ? elem.group : elem.ref);
+
+        if (rules[key] && !validator(value)) {
           var _errors$current, _errors$current$name;
 
           _isValid = false;
@@ -143,7 +162,7 @@ const useValidator = config => {
             };
           }
 
-          elements.current.set(ref, { ...elements.current.get(ref),
+          elements.current.set(name, { ...elements.current.get(name),
             valid: false
           });
         } else {
@@ -159,7 +178,7 @@ const useValidator = config => {
             isEmpty((_errors$current5 = errors.current) === null || _errors$current5 === void 0 ? void 0 : _errors$current5[name]) && ((_errors$current6 = errors.current) === null || _errors$current6 === void 0 ? true : delete _errors$current6[name]);
             errors.current = { ...errors.current
             };
-            elements.current.set(ref, { ...elements.current.get(ref),
+            elements.current.set(name, { ...elements.current.get(name),
               valid: true
             });
           }
@@ -183,45 +202,49 @@ const useValidator = config => {
   };
 
   const detectInput = ref => e => {
+    var _ref$current;
+
     e.stopPropagation();
+    const name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
 
     if (!dirtyElements.current.has(ref.current)) {
       dirtyElements.current.set(ref.current, null);
     }
 
     if (!triedToSubmit.current && customConfiguration.current.validateFormOnSubmit) return;
-    fieldValidation(ref.current);
+    const t = elements.current.get(name);
+    fieldValidation(t);
   };
 
   const detectChange = ref => e => {
-    var _ref$current;
+    var _ref$current2;
 
     e.stopPropagation();
-    const name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
-
-    if (isRadio(ref.current) && name) {
-      console.log(findElementsWithSameName(elements, name));
-    }
+    const name = (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.name;
+    const t = ref.current && elements.current.get(name);
+    fieldValidation(t);
   };
 
   const track = (elem, rules) => {
-    var _ref$current2, _ref$current3;
+    var _ref$current3, _ref$current4;
 
     if (!elem) return;
     const ref = createRef();
     ref.current = elem;
+    const name = hasNameAttribute(ref.current);
+    const isRadioOrCheckbox = isRadio(ref.current) || isCheckbox(ref.current);
 
-    if (((_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.type) === 'radio') {
+    if (((_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type) === 'radio') {
       ref.current && ref.current.addEventListener('change', detectChange(ref));
     } else {
-      if (elements.current.has(ref.current)) return;
+      if (elements.current.has(name)) return;
       ref.current && ref.current.addEventListener('focus', detectTouch(ref));
       ref.current && ref.current.addEventListener('input', detectInput(ref));
     }
 
     const validators = getValidators(customValidators.current, builtInValidators, rules);
-    const name = hasNameAttribute(ref.current);
-    const dataFields = {
+    if (!name) return;
+    const dataFields = elements.current.get(name) || {
       valid: true,
       ...(rules && {
         fieldRules: rules
@@ -229,16 +252,23 @@ const useValidator = config => {
       ...(validators && {
         validators
       }),
-      type: (_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type,
+      type: (_ref$current4 = ref.current) === null || _ref$current4 === void 0 ? void 0 : _ref$current4.type,
       name: name,
-      ...(isRadio(ref.current) && {
+      ...(isRadioOrCheckbox && {
         checked: false
       }),
-      ...(isRadio(ref.current) && {
+      ...(isRadioOrCheckbox && {
         group: []
-      })
+      }),
+      ref
     };
-    elements.current.set(ref.current, dataFields);
+
+    if (dataFields.group) {
+      dataFields.group.push(ref);
+      delete dataFields.ref;
+    }
+
+    elements.current.set(name, dataFields);
   };
 
   const detectTouch = ref => () => {

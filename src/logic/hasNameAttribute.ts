@@ -1,7 +1,4 @@
-// import { RefObject } from 'react'
-import { BasicRefs } from '../types/fields'
-
-export const hasNameAttribute = (ref: BasicRefs) => {
+export const hasNameAttribute = (ref: HTMLInputElement) => {
   const name = ref.name
   if (name) {
     return name

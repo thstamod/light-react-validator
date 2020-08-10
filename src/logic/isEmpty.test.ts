@@ -1,4 +1,4 @@
-import { isEmpty } from './genericFunctions'
+import { isEmpty } from './isEmpty'
 
 describe('isEmpty function', () => {
   test('is empty array', () => {

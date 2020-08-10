@@ -19,8 +19,16 @@ function _extends() {
 }
 
 var builtInValidators = {
-  required: function required(input) {
-    return input.trim().length > 0;
+  required: function required(value) {
+    if (typeof value === 'string') {
+      return value.trim().length > 0;
+    }
+
+    if (value) {
+      return true;
+    }
+
+    return false;
   },
   email: function email(input) {
     return /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input);
@@ -78,20 +86,28 @@ var isRadio = function isRadio(ref) {
   return ref.type === 'radio';
 };
 
-var findElementsWithSameName = function findElementsWithSameName(elements, name) {
-  var sn = [];
-  elements.current.forEach(function (value, key) {
-    value.name === name && sn.push(key);
-  });
-  return sn.length ? sn : null;
-};
-
 var isEmpty = function isEmpty(o) {
   if (Array.isArray(o)) {
     return !o.length;
   }
 
   return Object.keys(o).length === 0 && o.constructor === Object;
+};
+
+var isCheckbox = function isCheckbox(ref) {
+  return ref.type === 'checkbox';
+};
+
+var isArray = function isArray(a) {
+  return Array.isArray(a);
+};
+
+var getValue = function getValue(v, _type) {
+  if (isArray(v)) {
+    v.reduce(function (prev, e) {
+      return e.current.checked || prev;
+    }, false);
+  }
 };
 
 var useValidator = function useValidator(config) {
@@ -117,8 +133,8 @@ var useValidator = function useValidator(config) {
         dirtyElements.current = new Map(elements.current);
       }
 
-      elements.current.forEach(function (_value, key) {
-        fieldValidation(key);
+      elements.current.forEach(function (value) {
+        fieldValidation(value);
       });
       triedToSubmit.current = true;
 
@@ -140,14 +156,16 @@ var useValidator = function useValidator(config) {
       customConfiguration.current.validateFormOnSubmit = true;
     }
   }, []);
+  react.useEffect(function () {});
 
-  var fieldValidation = function fieldValidation(ref) {
+  var fieldValidation = function fieldValidation(elem) {
     var _isValid = true;
 
-    var _ref = elements.current.get(ref) || {},
+    var _ref = elements.current.get(elem.name) || {},
         fieldRules = _ref.fieldRules,
         validators = _ref.validators,
-        name = _ref.name;
+        name = _ref.name,
+        type = _ref.type;
 
     var _ref2 = fieldRules || {},
         rules = _ref2.rules,
@@ -155,9 +173,12 @@ var useValidator = function useValidator(config) {
 
     if (rules && name) {
       for (var key in validators) {
-        var validator = validators[key];
+        var _elem$ref$current;
 
-        if (rules[key] && !validator(ref === null || ref === void 0 ? void 0 : ref.value)) {
+        var validator = validators[key];
+        var value = type === 'text' ? (_elem$ref$current = elem.ref.current) === null || _elem$ref$current === void 0 ? void 0 : _elem$ref$current.value : getValue(!isEmpty(elem.group) ? elem.group : elem.ref);
+
+        if (rules[key] && !validator(value)) {
           var _errors$current, _errors$current$name;
 
           _isValid = false;
@@ -172,7 +193,7 @@ var useValidator = function useValidator(config) {
             errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);
           }
 
-          elements.current.set(ref, _extends({}, elements.current.get(ref), {
+          elements.current.set(name, _extends({}, elements.current.get(name), {
             valid: false
           }));
         } else {
@@ -187,7 +208,7 @@ var useValidator = function useValidator(config) {
 
             isEmpty((_errors$current5 = errors.current) === null || _errors$current5 === void 0 ? void 0 : _errors$current5[name]) && ((_errors$current6 = errors.current) === null || _errors$current6 === void 0 ? true : delete _errors$current6[name]);
             errors.current = _extends({}, errors.current);
-            elements.current.set(ref, _extends({}, elements.current.get(ref), {
+            elements.current.set(name, _extends({}, elements.current.get(name), {
               valid: true
             }));
           }
@@ -212,64 +233,75 @@ var useValidator = function useValidator(config) {
 
   var detectInput = function detectInput(ref) {
     return function (e) {
+      var _ref$current;
+
       e.stopPropagation();
+      var name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
 
       if (!dirtyElements.current.has(ref.current)) {
         dirtyElements.current.set(ref.current, null);
       }
 
       if (!triedToSubmit.current && customConfiguration.current.validateFormOnSubmit) return;
-      fieldValidation(ref.current);
+      var t = elements.current.get(name);
+      fieldValidation(t);
     };
   };
 
   var detectChange = function detectChange(ref) {
     return function (e) {
-      var _ref$current;
+      var _ref$current2;
 
       e.stopPropagation();
-      var name = (_ref$current = ref.current) === null || _ref$current === void 0 ? void 0 : _ref$current.name;
-
-      if (isRadio(ref.current) && name) {
-        console.log(findElementsWithSameName(elements, name));
-      }
+      var name = (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.name;
+      var t = ref.current && elements.current.get(name);
+      fieldValidation(t);
     };
   };
 
   var track = function track(elem, rules) {
-    var _ref$current2, _ref$current3;
+    var _ref$current3, _ref$current4;
 
     if (!elem) return;
     var ref = react.createRef();
     ref.current = elem;
+    var name = hasNameAttribute(ref.current);
+    var isRadioOrCheckbox = isRadio(ref.current) || isCheckbox(ref.current);
 
-    if (((_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.type) === 'radio') {
+    if (((_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type) === 'radio') {
       ref.current && ref.current.addEventListener('change', detectChange(ref));
     } else {
-      if (elements.current.has(ref.current)) return;
+      if (elements.current.has(name)) return;
       ref.current && ref.current.addEventListener('focus', detectTouch(ref));
       ref.current && ref.current.addEventListener('input', detectInput(ref));
     }
 
     var validators = getValidators(customValidators.current, builtInValidators, rules);
-    var name = hasNameAttribute(ref.current);
+    if (!name) return;
 
-    var dataFields = _extends({
+    var dataFields = elements.current.get(name) || _extends({
       valid: true
     }, rules && {
       fieldRules: rules
     }, validators && {
       validators: validators
     }, {
-      type: (_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type,
+      type: (_ref$current4 = ref.current) === null || _ref$current4 === void 0 ? void 0 : _ref$current4.type,
       name: name
-    }, isRadio(ref.current) && {
+    }, isRadioOrCheckbox && {
       checked: false
-    }, isRadio(ref.current) && {
+    }, isRadioOrCheckbox && {
       group: []
+    }, {
+      ref: ref
     });
 
-    elements.current.set(ref.current, dataFields);
+    if (dataFields.group) {
+      dataFields.group.push(ref);
+      delete dataFields.ref;
+    }
+
+    elements.current.set(name, dataFields);
   };
 
   var detectTouch = function detectTouch(ref) {

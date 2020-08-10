@@ -554,14 +554,16 @@ describe('useValidator form', () => {
   })
 })
 
-describe('useValidator form', () => {
-  test('input type radio is required', () => {
+describe('useValidator checkbox', () => {
+  test('input type radio is required on submit', () => {
+    let gFormValidity = null
     let gErrors = {}
     const Component = () => {
-      const { track, submitForm, errors } = useValidator()
+      const { track, submitForm, errors, formValidity } = useValidator()
       gErrors = errors
+      gFormValidity = formValidity
       return (
-        <div>
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
           <div>
             <input
               type='radio'
@@ -615,11 +617,142 @@ describe('useValidator form', () => {
             />
             <label htmlFor='louie'>Louie</label>
           </div>
-        </div>
+          <button type='submit'>submit</button>
+        </form>
       )
     }
 
     const t = render(<Component />)
-    return false
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(false)
+    expect(gErrors).toEqual({ drone: { required: 'radio is required' } })
+  })
+  test('input type radio is required on submit same name not all required', () => {
+    let gFormValidity = null
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <div>
+            <input
+              type='radio'
+              id='huey'
+              name='drone'
+              value='huey'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'radio is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='huey'>Huey</label>
+          </div>
+
+          <div>
+            <input
+              type='radio'
+              id='dewey'
+              name='drone'
+              value='dewey'
+              ref={(elem) => track(elem)}
+            />
+            <label htmlFor='dewey'>Dewey</label>
+          </div>
+
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(false)
+    expect(gErrors).toEqual({ drone: { required: 'radio is required' } })
+  })
+  test('input type radio is submitted successfully', () => {
+    let gFormValidity = null
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <div>
+            <input
+              type='radio'
+              id='huey'
+              aria-label='huey'
+              name='drone'
+              value='huey'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'radio is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='huey'>Huey</label>
+          </div>
+
+          <div>
+            <input
+              type='radio'
+              id='dewey'
+              name='drone'
+              value='dewey'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'radio is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='dewey'>Dewey</label>
+          </div>
+
+          <div>
+            <input
+              type='radio'
+              id='louie'
+              name='drone'
+              value='louie'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'radio is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='louie'>Louie</label>
+          </div>
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const radio1 = t.getByLabelText('Huey')
+    // console.log(radio1)
+    fireEvent.click(radio1)
+    //  fireEvent.change(radio1, { target: { value: 'huey' } })
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(true)
+    expect(gErrors).toEqual({})
   })
 })
