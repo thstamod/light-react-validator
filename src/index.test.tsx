@@ -3,6 +3,7 @@ import React from 'react'
 import { render, fireEvent, cleanup } from '@testing-library/react'
 import { renderHook } from '@testing-library/react-hooks'
 import { useValidator } from '.'
+import { DEFAULT_MIN_VERSION } from 'tls'
 
 afterEach(cleanup)
 
@@ -554,7 +555,7 @@ describe('useValidator form', () => {
   })
 })
 
-describe('useValidator checkbox', () => {
+describe('useValidator radio', () => {
   test('input type radio is required on submit', () => {
     let gFormValidity = null
     let gErrors = {}
@@ -660,6 +661,7 @@ describe('useValidator checkbox', () => {
               type='radio'
               id='dewey'
               name='drone'
+              aria-label='dewey'
               value='dewey'
               ref={(elem) => track(elem)}
             />
@@ -746,13 +748,229 @@ describe('useValidator checkbox', () => {
     }
 
     const t = render(<Component />)
-    const radio1 = t.getByLabelText('Huey')
-    // console.log(radio1)
-    fireEvent.click(radio1)
-    //  fireEvent.change(radio1, { target: { value: 'huey' } })
+    const radio = t.getByLabelText('Huey')
+    fireEvent.click(radio)
     const submitBtn = t.getByText(/submit/i)
     fireEvent.click(submitBtn)
     expect(gFormValidity).toBe(true)
     expect(gErrors).toEqual({})
+  })
+  test('input type radio is required revalidate on resubmit', () => {
+    let gFormValidity = null
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <div>
+            <input
+              type='radio'
+              id='huey'
+              name='drone'
+              value='huey'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'radio is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='huey'>Huey</label>
+          </div>
+
+          <div>
+            <input
+              type='radio'
+              id='dewey'
+              name='drone'
+              aria-label='dewey'
+              value='dewey'
+              ref={(elem) => track(elem)}
+            />
+            <label htmlFor='dewey'>Dewey</label>
+          </div>
+
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(false)
+    expect(gErrors).toEqual({ drone: { required: 'radio is required' } })
+    const radio = t.getByLabelText('dewey')
+    fireEvent.click(radio)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(true)
+    expect(gErrors).toEqual({})
+  })
+})
+
+describe('useValidator checkbox', () => {
+  test('input type checkbox is required and throw an error on submit', () => {
+    let gFormValidity = null
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle'
+              name='vehicle'
+              value='Bike'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'checkbox is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(false)
+    expect(gErrors).toEqual({ vehicle: { required: 'checkbox is required' } })
+  })
+  test('input type checkbox is required and its submitted successfully', () => {
+    let gFormValidity = null
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle'
+              name='vehicle'
+              value='Bike'
+              aria-label='checkbox'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'checkbox is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const submitBtn = t.getByText(/submit/i)
+    const checkbox = t.getByLabelText('checkbox')
+    fireEvent.click(checkbox)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(true)
+    expect(gErrors).toEqual({})
+  })
+  test('input type checkbox is required in group with min ', () => {
+    let gFormValidity = null
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle1'
+              name='vehicle'
+              value='Bike'
+              aria-label='checkbox1'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true, minCheckboxes: 2 },
+                  messages: {
+                    required: 'checkbox is required',
+                    minCheckboxes: 'you should check at least 2 checkboxes'
+                  }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle2'
+              name='vehicle'
+              value='Bike'
+              aria-label='checkbox2'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'checkbox is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle3'
+              name='vehicle'
+              value='Bike'
+              aria-label='checkbox3'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'checkbox is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const submitBtn = t.getByText(/submit/i)
+    const checkbox = t.getByLabelText('checkbox1')
+    fireEvent.click(checkbox)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(false)
+    expect(gErrors).toEqual({
+      vehicle: {
+        minCheckboxes: 'you should check at least 2 checkboxes'
+      }
+    })
   })
 })

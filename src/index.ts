@@ -53,15 +53,16 @@ export const useValidator = (config?: Config): UseValidator => {
   })
 
   const fieldValidation = (elem: DataField): void => {
-    let _isValid = true
     // eslint-disable-next-line no-debugger
     // debugger
+    let _isValid = true
     const { fieldRules, validators, name, type } =
       elements.current.get(elem.name!) || {}
     const { rules, messages } = fieldRules || {}
     if (rules && name) {
       for (const key in validators) {
         const validator = validators[key]
+        // TODO: refactor. it's not working correctly
         const value =
           type === 'text'
             ? elem.ref.current?.value
@@ -140,12 +141,13 @@ export const useValidator = (config?: Config): UseValidator => {
     ;(ref as React.MutableRefObject<HTMLInputElement>).current = elem
     const name = hasNameAttribute(ref.current!)
     const isRadioOrCheckbox = isRadio(ref.current!) || isCheckbox(ref.current!)
-    if (ref.current?.type === 'radio') {
-      ref.current && ref.current.addEventListener('change', detectChange(ref))
-    } else {
-      if (elements.current.has(name!)) return
-      ref.current && ref.current.addEventListener('focus', detectTouch(ref))
-      ref.current && ref.current.addEventListener('input', detectInput(ref))
+    if (!elements.current.has(name!)) {
+      if (isRadio(ref.current!) || isCheckbox(ref.current!)) {
+        ref.current && ref.current.addEventListener('change', detectChange(ref))
+      } else {
+        ref.current && ref.current.addEventListener('focus', detectTouch(ref))
+        ref.current && ref.current.addEventListener('input', detectInput(ref))
+      }
     }
     const validators = getValidators(
       customValidators.current,
@@ -164,11 +166,17 @@ export const useValidator = (config?: Config): UseValidator => {
       ...(isRadioOrCheckbox && { group: [] }),
       ref
     }
-    if (dataFields.group) {
-      dataFields.group.push(ref)
-      delete dataFields.ref
+    if (elements.current.has(name)) {
+      if (dataFields.ref && dataFields.group) {
+        dataFields.group.push(dataFields.ref)
+      }
+      if (dataFields.group) {
+        dataFields.group.push(ref)
+        delete dataFields.ref
+      }
     }
     elements.current.set(name, dataFields)
+    // console.log(elements)
   }
 
   const detectTouch = (ref: RefObject<HTMLInputElement>) => () => {

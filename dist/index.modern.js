@@ -13,7 +13,9 @@ var builtInValidators = {
     return false;
   },
   email: input => /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
-  minLen: (input, len) => input.toString().length < len
+  minLength: (input, len) => input.toString().length < len,
+  maxLength: (input, len) => input.toString().length > len,
+  minCheckboxes: () => {}
 };
 
 const checkForValidators = (configValidators, builtInValidators, name, data) => {
@@ -30,7 +32,7 @@ const checkForValidators = (configValidators, builtInValidators, name, data) => 
   if (builtInValidators[name]) {
     return builtInValidators[name];
   } else {
-    throw new Error(`no validation function with mane ${name}`);
+    console.warn(`no validation function with mane ${name}`);
   }
 };
 
@@ -76,10 +78,16 @@ const isArray = a => Array.isArray(a);
 
 const getValue = (v, _type) => {
   if (isArray(v)) {
-    v.reduce((prev, e) => {
+    return !!v.reduce((prev, e) => {
       return e.current.checked || prev;
     }, false);
   }
+
+  if (v.current.checked) {
+    return true;
+  }
+
+  return false;
 };
 
 const useValidator = config => {
@@ -226,7 +234,7 @@ const useValidator = config => {
   };
 
   const track = (elem, rules) => {
-    var _ref$current3, _ref$current4;
+    var _ref$current3;
 
     if (!elem) return;
     const ref = createRef();
@@ -234,12 +242,13 @@ const useValidator = config => {
     const name = hasNameAttribute(ref.current);
     const isRadioOrCheckbox = isRadio(ref.current) || isCheckbox(ref.current);
 
-    if (((_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type) === 'radio') {
-      ref.current && ref.current.addEventListener('change', detectChange(ref));
-    } else {
-      if (elements.current.has(name)) return;
-      ref.current && ref.current.addEventListener('focus', detectTouch(ref));
-      ref.current && ref.current.addEventListener('input', detectInput(ref));
+    if (!elements.current.has(name)) {
+      if (isRadio(ref.current) || isCheckbox(ref.current)) {
+        ref.current && ref.current.addEventListener('change', detectChange(ref));
+      } else {
+        ref.current && ref.current.addEventListener('focus', detectTouch(ref));
+        ref.current && ref.current.addEventListener('input', detectInput(ref));
+      }
     }
 
     const validators = getValidators(customValidators.current, builtInValidators, rules);
@@ -252,7 +261,7 @@ const useValidator = config => {
       ...(validators && {
         validators
       }),
-      type: (_ref$current4 = ref.current) === null || _ref$current4 === void 0 ? void 0 : _ref$current4.type,
+      type: (_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type,
       name: name,
       ...(isRadioOrCheckbox && {
         checked: false
@@ -263,9 +272,15 @@ const useValidator = config => {
       ref
     };
 
-    if (dataFields.group) {
-      dataFields.group.push(ref);
-      delete dataFields.ref;
+    if (elements.current.has(name)) {
+      if (dataFields.ref && dataFields.group) {
+        dataFields.group.push(dataFields.ref);
+      }
+
+      if (dataFields.group) {
+        dataFields.group.push(ref);
+        delete dataFields.ref;
+      }
     }
 
     elements.current.set(name, dataFields);

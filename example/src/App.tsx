@@ -1,4 +1,5 @@
 import React from 'react'
+import { serialize } from './serializeForm'
 import { useValidator } from 'light-react-validator'
 
 // const config = { validateFormOnSubmit: true }
@@ -13,6 +14,8 @@ const App = () => {
 
   const submit = () => {
     console.log('submitted')
+    var form = document.querySelector('form')
+    console.log(serialize(form))
   }
   const showErrors = (errors: any) => {
     const t = []
@@ -26,7 +29,7 @@ const App = () => {
   }
 
   return (
-    <form onSubmit={(e) => submitForm(submit)(e)}>
+    <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
       <label htmlFor='email'>email</label>
       <input
         ref={(elem) =>
@@ -122,7 +125,62 @@ const App = () => {
         />
         <label htmlFor='louie'>Louie</label>
       </div>
+      {errors?.drone && showErrors(errors.drone)}
       <br />
+      <div>
+        <input
+          type='checkbox'
+          id='vehicle'
+          name='vehicle'
+          value='Bike'
+          ref={(elem) =>
+            track(elem, {
+              rules: { required: true },
+              messages: {
+                required: 'checkbox is required'
+              }
+            })
+          }
+        />
+        <label htmlFor='vehicle'>bike</label>
+        {errors?.vehicle && showErrors(errors.vehicle)}
+        <br />
+        Group
+        <br />
+        <input
+          type='checkbox'
+          id='vehicle2'
+          name='groupCheckbox'
+          value='Car'
+          ref={(elem) =>
+            track(elem, {
+              rules: { required: true, minCheckboxes: 2 },
+              messages: {
+                required: 'checkbox is required',
+                minCheckboxes: 'you should check at least 2 checkboxes'
+              }
+            })
+          }
+        />
+        <label htmlFor='vehicle2'>car</label>
+        <br />
+        <input
+          type='checkbox'
+          id='vehicle3'
+          name='groupCheckbox'
+          value='Boat'
+          ref={(elem) =>
+            track(elem, {
+              rules: { required: true },
+              messages: {
+                required: 'checkbox is required'
+              }
+            })
+          }
+        />
+        <label htmlFor='vehicle3'>boat</label>
+        <br />
+      </div>
       <button disabled={!formValidity} type='submit'>
         submit
       </button>

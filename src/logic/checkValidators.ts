@@ -16,7 +16,7 @@ const checkForValidators = (
   if (builtInValidators[name]) {
     return builtInValidators[name]
   } else {
-    throw new Error(`no validation function with mane ${name}`)
+    console.warn(`no validation function with mane ${name}`)
   }
 }
 

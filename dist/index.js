@@ -33,9 +33,13 @@ var builtInValidators = {
   email: function email(input) {
     return /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input);
   },
-  minLen: function minLen(input, len) {
+  minLength: function minLength(input, len) {
     return input.toString().length < len;
-  }
+  },
+  maxLength: function maxLength(input, len) {
+    return input.toString().length > len;
+  },
+  minCheckboxes: function minCheckboxes() {}
 };
 
 var checkForValidators = function checkForValidators(configValidators, builtInValidators, name, data) {
@@ -52,7 +56,7 @@ var checkForValidators = function checkForValidators(configValidators, builtInVa
   if (builtInValidators[name]) {
     return builtInValidators[name];
   } else {
-    throw new Error("no validation function with mane " + name);
+    console.warn("no validation function with mane " + name);
   }
 };
 
@@ -104,10 +108,16 @@ var isArray = function isArray(a) {
 
 var getValue = function getValue(v, _type) {
   if (isArray(v)) {
-    v.reduce(function (prev, e) {
+    return !!v.reduce(function (prev, e) {
       return e.current.checked || prev;
     }, false);
   }
+
+  if (v.current.checked) {
+    return true;
+  }
+
+  return false;
 };
 
 var useValidator = function useValidator(config) {
@@ -260,7 +270,7 @@ var useValidator = function useValidator(config) {
   };
 
   var track = function track(elem, rules) {
-    var _ref$current3, _ref$current4;
+    var _ref$current3;
 
     if (!elem) return;
     var ref = react.createRef();
@@ -268,12 +278,13 @@ var useValidator = function useValidator(config) {
     var name = hasNameAttribute(ref.current);
     var isRadioOrCheckbox = isRadio(ref.current) || isCheckbox(ref.current);
 
-    if (((_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type) === 'radio') {
-      ref.current && ref.current.addEventListener('change', detectChange(ref));
-    } else {
-      if (elements.current.has(name)) return;
-      ref.current && ref.current.addEventListener('focus', detectTouch(ref));
-      ref.current && ref.current.addEventListener('input', detectInput(ref));
+    if (!elements.current.has(name)) {
+      if (isRadio(ref.current) || isCheckbox(ref.current)) {
+        ref.current && ref.current.addEventListener('change', detectChange(ref));
+      } else {
+        ref.current && ref.current.addEventListener('focus', detectTouch(ref));
+        ref.current && ref.current.addEventListener('input', detectInput(ref));
+      }
     }
 
     var validators = getValidators(customValidators.current, builtInValidators, rules);
@@ -286,7 +297,7 @@ var useValidator = function useValidator(config) {
     }, validators && {
       validators: validators
     }, {
-      type: (_ref$current4 = ref.current) === null || _ref$current4 === void 0 ? void 0 : _ref$current4.type,
+      type: (_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type,
       name: name
     }, isRadioOrCheckbox && {
       checked: false
@@ -296,9 +307,15 @@ var useValidator = function useValidator(config) {
       ref: ref
     });
 
-    if (dataFields.group) {
-      dataFields.group.push(ref);
-      delete dataFields.ref;
+    if (elements.current.has(name)) {
+      if (dataFields.ref && dataFields.group) {
+        dataFields.group.push(dataFields.ref);
+      }
+
+      if (dataFields.group) {
+        dataFields.group.push(ref);
+        delete dataFields.ref;
+      }
     }
 
     elements.current.set(name, dataFields);
