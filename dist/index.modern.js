@@ -1,12 +1,22 @@
 import { useRef, useState, useEffect, createRef } from 'react';
 
+const isEmpty = o => {
+  if (Array.isArray(o)) {
+    return !o.length;
+  }
+
+  return Object.keys(o).length === 0 && o.constructor === Object;
+};
+
+const isArray = a => Array.isArray(a);
+
 var builtInValidators = {
   required: value => {
     if (typeof value === 'string') {
       return value.trim().length > 0;
     }
 
-    if (value) {
+    if (value && typeof value === 'object' && !isEmpty(value)) {
       return true;
     }
 
@@ -15,7 +25,13 @@ var builtInValidators = {
   email: input => /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
   minLength: (input, len) => input.toString().length < len,
   maxLength: (input, len) => input.toString().length > len,
-  minCheckboxes: () => {}
+  minCheckboxes: (input, availableOptions = null) => {
+    if (typeof input === 'object' && isArray(input) && availableOptions && typeof availableOptions === 'number') {
+      return input.length >= availableOptions;
+    }
+
+    return false;
+  }
 };
 
 const checkForValidators = (configValidators, builtInValidators, name, data) => {
@@ -64,30 +80,18 @@ const hasNameAttribute = ref => {
 
 const isRadio = ref => ref.type === 'radio';
 
-const isEmpty = o => {
-  if (Array.isArray(o)) {
-    return !o.length;
-  }
-
-  return Object.keys(o).length === 0 && o.constructor === Object;
-};
-
 const isCheckbox = ref => ref.type === 'checkbox';
-
-const isArray = a => Array.isArray(a);
 
 const getValue = (v, _type) => {
   if (isArray(v)) {
-    return !!v.reduce((prev, e) => {
-      return e.current.checked || prev;
-    }, false);
+    return v.filter(e => e.current.checked).map(e => e.current.value);
   }
 
   if (v.current.checked) {
-    return true;
+    return v.current.value;
   }
 
-  return false;
+  return null;
 };
 
 const useValidator = config => {
@@ -144,7 +148,8 @@ const useValidator = config => {
     } = elements.current.get(elem.name) || {};
     const {
       rules,
-      messages
+      messages,
+      options
     } = fieldRules || {};
 
     if (rules && name) {
@@ -152,9 +157,11 @@ const useValidator = config => {
         var _elem$ref$current;
 
         const validator = validators[key];
+        const availableOptions = options && options[key];
+        debugger;
         const value = type === 'text' ? (_elem$ref$current = elem.ref.current) === null || _elem$ref$current === void 0 ? void 0 : _elem$ref$current.value : getValue(!isEmpty(elem.group) ? elem.group : elem.ref);
 
-        if (rules[key] && !validator(value)) {
+        if (rules[key] && !validator(value, availableOptions)) {
           var _errors$current, _errors$current$name;
 
           _isValid = false;
@@ -240,9 +247,11 @@ const useValidator = config => {
     const ref = createRef();
     ref.current = elem;
     const name = hasNameAttribute(ref.current);
+    if (!name) return;
     const isRadioOrCheckbox = isRadio(ref.current) || isCheckbox(ref.current);
+    const e = elements.current.get(name);
 
-    if (!elements.current.has(name)) {
+    if (!elements.current.has(name) || !((e === null || e === void 0 ? void 0 : e.group) && e.group.some(elem => elem.current === ref.current))) {
       if (isRadio(ref.current) || isCheckbox(ref.current)) {
         ref.current && ref.current.addEventListener('change', detectChange(ref));
       } else {
@@ -252,7 +261,6 @@ const useValidator = config => {
     }
 
     const validators = getValidators(customValidators.current, builtInValidators, rules);
-    if (!name) return;
     const dataFields = elements.current.get(name) || {
       valid: true,
       ...(rules && {
@@ -277,7 +285,7 @@ const useValidator = config => {
         dataFields.group.push(dataFields.ref);
       }
 
-      if (dataFields.group) {
+      if (dataFields.group && !dataFields.group.some(elem => elem.current === ref.current)) {
         dataFields.group.push(ref);
         delete dataFields.ref;
       }

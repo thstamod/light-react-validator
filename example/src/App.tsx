@@ -154,11 +154,12 @@ const App = () => {
           value='Car'
           ref={(elem) =>
             track(elem, {
-              rules: { required: true, minCheckboxes: 2 },
+              rules: { required: true, minCheckboxes: true },
               messages: {
                 required: 'checkbox is required',
                 minCheckboxes: 'you should check at least 2 checkboxes'
-              }
+              },
+              options: { minCheckboxes: 2 }
             })
           }
         />
@@ -179,6 +180,8 @@ const App = () => {
           }
         />
         <label htmlFor='vehicle3'>boat</label>
+        <br />
+        {errors?.groupCheckbox && showErrors(errors.groupCheckbox)}
         <br />
       </div>
       <button disabled={!formValidity} type='submit'>

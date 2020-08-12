@@ -1,9 +1,16 @@
+import { isEmpty } from '../logic/isEmpty'
+import { isArray } from '../logic/isArray'
+
 export default {
   required: <T>(value: T): boolean => {
     if (typeof value === 'string') {
       return (value as string).trim().length > 0
     }
-    if (value) {
+    if (
+      value &&
+      typeof value === 'object' &&
+      !isEmpty((value as unknown) as object)
+    ) {
       return true
     }
     return false
@@ -14,5 +21,15 @@ export default {
     input.toString().length < len,
   maxLength: (input: string, len: number): boolean =>
     input.toString().length > len,
-  minCheckboxes: () => {}
+  minCheckboxes: (input: any, availableOptions: any = null) => {
+    if (
+      typeof input === 'object' &&
+      isArray(input) &&
+      availableOptions &&
+      typeof availableOptions === 'number'
+    ) {
+      return (input as []).length >= availableOptions
+    }
+    return false
+  }
 }

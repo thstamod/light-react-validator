@@ -58,16 +58,21 @@ export const useValidator = (config?: Config): UseValidator => {
     let _isValid = true
     const { fieldRules, validators, name, type } =
       elements.current.get(elem.name!) || {}
-    const { rules, messages } = fieldRules || {}
+    const { rules, messages, options } = fieldRules || {}
     if (rules && name) {
       for (const key in validators) {
         const validator = validators[key]
+        const availableOptions = options && options[key]
+        // eslint-disable-next-line no-debugger
+        debugger
         // TODO: refactor. it's not working correctly
         const value =
           type === 'text'
             ? elem.ref.current?.value
-            : getValue(!isEmpty(elem.group!) ? elem.group : elem.ref, type!)
-        if (rules[key] && !validator(value)) {
+            : // TODO: should this returns number instead of boolean
+              getValue(!isEmpty(elem.group!) ? elem.group : elem.ref, type!)
+        // console.log(value)
+        if (rules[key] && !validator(value, availableOptions)) {
           _isValid = false
           if (errors.current?.[name]?.[key]) continue
           shouldRerender.current = true
@@ -137,11 +142,18 @@ export const useValidator = (config?: Config): UseValidator => {
 
   const track = (elem: HTMLInputElement, rules?: Rules): void => {
     if (!elem) return
+
     const ref = createRef<HTMLInputElement>()
     ;(ref as React.MutableRefObject<HTMLInputElement>).current = elem
     const name = hasNameAttribute(ref.current!)
+    if (!name) return
     const isRadioOrCheckbox = isRadio(ref.current!) || isCheckbox(ref.current!)
-    if (!elements.current.has(name!)) {
+    const e = elements.current.get(name)
+    // TODO: this needs refactoring yesterday
+    if (
+      !elements.current.has(name) ||
+      !(e?.group && e.group.some((elem) => elem.current === ref.current))
+    ) {
       if (isRadio(ref.current!) || isCheckbox(ref.current!)) {
         ref.current && ref.current.addEventListener('change', detectChange(ref))
       } else {
@@ -155,7 +167,6 @@ export const useValidator = (config?: Config): UseValidator => {
       rules
     )
 
-    if (!name) return
     const dataFields: DataField = elements.current.get(name) || {
       valid: true,
       ...(rules && { fieldRules: rules }),
@@ -170,13 +181,16 @@ export const useValidator = (config?: Config): UseValidator => {
       if (dataFields.ref && dataFields.group) {
         dataFields.group.push(dataFields.ref)
       }
-      if (dataFields.group) {
+      if (
+        dataFields.group &&
+        // TODO: refactor this
+        !dataFields.group.some((elem) => elem.current === ref.current)
+      ) {
         dataFields.group.push(ref)
         delete dataFields.ref
       }
     }
     elements.current.set(name, dataFields)
-    // console.log(elements)
   }
 
   const detectTouch = (ref: RefObject<HTMLInputElement>) => () => {

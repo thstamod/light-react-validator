@@ -17,4 +17,5 @@ export type Rules = {
   rules: object
   messages: object
   customValidators?: object
+  options?: { [key: string]: any }
 }

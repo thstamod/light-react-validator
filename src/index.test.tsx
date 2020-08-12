@@ -827,7 +827,7 @@ describe('useValidator checkbox', () => {
               type='checkbox'
               id='vehicle'
               name='vehicle'
-              value='Bike'
+              value='Bike1'
               ref={(elem) =>
                 track(elem, {
                   rules: { required: true },
@@ -865,7 +865,7 @@ describe('useValidator checkbox', () => {
               type='checkbox'
               id='vehicle'
               name='vehicle'
-              value='Bike'
+              value='Bike2'
               aria-label='checkbox'
               ref={(elem) =>
                 track(elem, {
@@ -892,7 +892,7 @@ describe('useValidator checkbox', () => {
     expect(gFormValidity).toBe(true)
     expect(gErrors).toEqual({})
   })
-  test('input type checkbox is required in group with min ', () => {
+  test('input type checkbox is required in group with min and failed when the criteria are not met', () => {
     let gFormValidity = null
     let gErrors = {}
     const Component = () => {
@@ -906,15 +906,16 @@ describe('useValidator checkbox', () => {
               type='checkbox'
               id='vehicle1'
               name='vehicle'
-              value='Bike'
+              value='Bike31'
               aria-label='checkbox1'
               ref={(elem) =>
                 track(elem, {
-                  rules: { required: true, minCheckboxes: 2 },
+                  rules: { required: true, minCheckboxes: true },
                   messages: {
                     required: 'checkbox is required',
                     minCheckboxes: 'you should check at least 2 checkboxes'
-                  }
+                  },
+                  options: { minCheckboxes: 2 }
                 })
               }
             />
@@ -925,7 +926,7 @@ describe('useValidator checkbox', () => {
               type='checkbox'
               id='vehicle2'
               name='vehicle'
-              value='Bike'
+              value='Bike32'
               aria-label='checkbox2'
               ref={(elem) =>
                 track(elem, {
@@ -943,7 +944,7 @@ describe('useValidator checkbox', () => {
               type='checkbox'
               id='vehicle3'
               name='vehicle'
-              value='Bike'
+              value='Bike33'
               aria-label='checkbox3'
               ref={(elem) =>
                 track(elem, {
@@ -972,5 +973,85 @@ describe('useValidator checkbox', () => {
         minCheckboxes: 'you should check at least 2 checkboxes'
       }
     })
+  })
+  test('input type checkbox is required in group with min success when criteria are met', () => {
+    let gFormValidity = null
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle1'
+              name='vehicle'
+              value='Bike4'
+              aria-label='checkbox1'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true, minCheckboxes: true },
+                  messages: {
+                    required: 'checkbox is required',
+                    minCheckboxes: 'you should check at least 2 checkboxes'
+                  },
+                  options: { minCheckboxes: 2 }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle2'
+              name='vehicle'
+              value='Bike4'
+              aria-label='checkbox2'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'checkbox is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle3'
+              name='vehicle'
+              value='Bike4'
+              aria-label='checkbox3'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'checkbox is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const submitBtn = t.getByText(/submit/i)
+    const checkbox1 = t.getByLabelText('checkbox1')
+    const checkbox2 = t.getByLabelText('checkbox2')
+    fireEvent.click(checkbox1)
+    fireEvent.click(checkbox2)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toBe(true)
+    expect(gErrors).toEqual({})
   })
 })

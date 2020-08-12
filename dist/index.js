@@ -18,13 +18,25 @@ function _extends() {
   return _extends.apply(this, arguments);
 }
 
+var isEmpty = function isEmpty(o) {
+  if (Array.isArray(o)) {
+    return !o.length;
+  }
+
+  return Object.keys(o).length === 0 && o.constructor === Object;
+};
+
+var isArray = function isArray(a) {
+  return Array.isArray(a);
+};
+
 var builtInValidators = {
   required: function required(value) {
     if (typeof value === 'string') {
       return value.trim().length > 0;
     }
 
-    if (value) {
+    if (value && typeof value === 'object' && !isEmpty(value)) {
       return true;
     }
 
@@ -39,7 +51,17 @@ var builtInValidators = {
   maxLength: function maxLength(input, len) {
     return input.toString().length > len;
   },
-  minCheckboxes: function minCheckboxes() {}
+  minCheckboxes: function minCheckboxes(input, availableOptions) {
+    if (availableOptions === void 0) {
+      availableOptions = null;
+    }
+
+    if (typeof input === 'object' && isArray(input) && availableOptions && typeof availableOptions === 'number') {
+      return input.length >= availableOptions;
+    }
+
+    return false;
+  }
 };
 
 var checkForValidators = function checkForValidators(configValidators, builtInValidators, name, data) {
@@ -90,34 +112,24 @@ var isRadio = function isRadio(ref) {
   return ref.type === 'radio';
 };
 
-var isEmpty = function isEmpty(o) {
-  if (Array.isArray(o)) {
-    return !o.length;
-  }
-
-  return Object.keys(o).length === 0 && o.constructor === Object;
-};
-
 var isCheckbox = function isCheckbox(ref) {
   return ref.type === 'checkbox';
 };
 
-var isArray = function isArray(a) {
-  return Array.isArray(a);
-};
-
 var getValue = function getValue(v, _type) {
   if (isArray(v)) {
-    return !!v.reduce(function (prev, e) {
-      return e.current.checked || prev;
-    }, false);
+    return v.filter(function (e) {
+      return e.current.checked;
+    }).map(function (e) {
+      return e.current.value;
+    });
   }
 
   if (v.current.checked) {
-    return true;
+    return v.current.value;
   }
 
-  return false;
+  return null;
 };
 
 var useValidator = function useValidator(config) {
@@ -179,16 +191,19 @@ var useValidator = function useValidator(config) {
 
     var _ref2 = fieldRules || {},
         rules = _ref2.rules,
-        messages = _ref2.messages;
+        messages = _ref2.messages,
+        options = _ref2.options;
 
     if (rules && name) {
       for (var key in validators) {
         var _elem$ref$current;
 
         var validator = validators[key];
+        var availableOptions = options && options[key];
+        debugger;
         var value = type === 'text' ? (_elem$ref$current = elem.ref.current) === null || _elem$ref$current === void 0 ? void 0 : _elem$ref$current.value : getValue(!isEmpty(elem.group) ? elem.group : elem.ref);
 
-        if (rules[key] && !validator(value)) {
+        if (rules[key] && !validator(value, availableOptions)) {
           var _errors$current, _errors$current$name;
 
           _isValid = false;
@@ -276,9 +291,13 @@ var useValidator = function useValidator(config) {
     var ref = react.createRef();
     ref.current = elem;
     var name = hasNameAttribute(ref.current);
+    if (!name) return;
     var isRadioOrCheckbox = isRadio(ref.current) || isCheckbox(ref.current);
+    var e = elements.current.get(name);
 
-    if (!elements.current.has(name)) {
+    if (!elements.current.has(name) || !((e === null || e === void 0 ? void 0 : e.group) && e.group.some(function (elem) {
+      return elem.current === ref.current;
+    }))) {
       if (isRadio(ref.current) || isCheckbox(ref.current)) {
         ref.current && ref.current.addEventListener('change', detectChange(ref));
       } else {
@@ -288,7 +307,6 @@ var useValidator = function useValidator(config) {
     }
 
     var validators = getValidators(customValidators.current, builtInValidators, rules);
-    if (!name) return;
 
     var dataFields = elements.current.get(name) || _extends({
       valid: true
@@ -312,7 +330,9 @@ var useValidator = function useValidator(config) {
         dataFields.group.push(dataFields.ref);
       }
 
-      if (dataFields.group) {
+      if (dataFields.group && !dataFields.group.some(function (elem) {
+        return elem.current === ref.current;
+      })) {
         dataFields.group.push(ref);
         delete dataFields.ref;
       }
