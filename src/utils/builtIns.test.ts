@@ -1,0 +1,57 @@
+import builtIns from './builtIns'
+
+const { email, maxLength, minCheckboxes, minLength, required } = builtIns
+
+describe('builtIn validator functions', () => {
+  test('email function', () => {
+    expect(email('test')).toBe(false)
+    expect(email('')).toBe(false)
+    expect(email('test@')).toBe(false)
+    expect(email('1test@fdf.gr')).toBe(true)
+    expect(email('1test@fdf')).toBe(false)
+    expect(email('1test@fdf.')).toBe(false)
+    expect(email('1test@')).toBe(false)
+    expect(email('1test@fdf.')).toBe(false)
+    expect(email('1test@')).toBe(false)
+    expect(email('1test')).toBe(false)
+    expect(email('#test@fdf.gr')).toBe(false)
+    expect(email('#test@fdf')).toBe(false)
+    expect(email('#test@fdf.')).toBe(false)
+    expect(email('#test@')).toBe(false)
+    expect(email('#test@fdf.')).toBe(false)
+    expect(email('#test@')).toBe(false)
+    expect(email('#test')).toBe(false)
+    expect(email('test@rt.f')).toBe(false)
+    expect(email('test@1rt.gr')).toBe(true)
+    expect(email('test@r1t.gr')).toBe(true)
+    expect(email('test@rt1.gr')).toBe(true)
+    expect(email('test@rt.gr')).toBe(true)
+    expect(email('test1@rt.gr')).toBe(true)
+    expect(email('test@rt.com')).toBe(true)
+  })
+  test('maxLength', () => {
+    expect(maxLength('test', 2)).toBe(false)
+    expect(maxLength('test', 10)).toBe(true)
+    expect(maxLength('t', 1)).toBe(true)
+  })
+  test('minLength', () => {
+    expect(minLength('test', 3)).toBe(true)
+    expect(minLength('test', 6)).toBe(false)
+    expect(minLength('t', 1)).toBe(true)
+  })
+  test('required', () => {
+    expect(required('test')).toBe(true)
+    expect(required(1)).toBe(true)
+    expect(required('')).toBe(false)
+    expect(required([])).toBe(false)
+    expect(required({})).toBe(false)
+    expect(required([1, 2])).toBe(true)
+    expect(required({ a: 1 })).toBe(true)
+  })
+  test('minCheckboxes', () => {
+    expect(minCheckboxes(['te', 'st'], 2)).toBe(true)
+    expect(minCheckboxes(['te', 'st'], 1)).toBe(true)
+    expect(minCheckboxes(['te', 'st'], 3)).toBe(false)
+    expect(minCheckboxes([], 1)).toBe(false)
+  })
+})

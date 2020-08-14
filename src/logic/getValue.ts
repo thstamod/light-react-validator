@@ -1,7 +1,5 @@
 import { isArray } from './isArray'
 export const getValue = <T>(v: T, _type: string): [] | any | null => {
-  // eslint-disable-next-line no-debugger
-  // debugger
   if (isArray(v)) {
     return ((v as unknown) as React.MutableRefObject<HTMLInputElement>[])
       .filter((e) => e.current.checked)

@@ -4,6 +4,7 @@ import { render, fireEvent, cleanup } from '@testing-library/react'
 import { renderHook } from '@testing-library/react-hooks'
 import { useValidator } from '.'
 import { DEFAULT_MIN_VERSION } from 'tls'
+import { Config } from './types/configuration'
 
 afterEach(cleanup)
 
@@ -1053,5 +1054,103 @@ describe('useValidator checkbox', () => {
     fireEvent.click(submitBtn)
     expect(gFormValidity).toBe(true)
     expect(gErrors).toEqual({})
+  })
+})
+
+describe('builtIn Validators', () => {})
+
+describe('rules hierarchy', () => {
+  test('config validator overrules builtIn', () => {
+    const config: Config = {
+      customValidators: {
+        email: (input: string): boolean =>
+          /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{1})+$/.test(input)
+      }
+    }
+    let gFormValidity = false
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not an email'
+                }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('email')
+    fireEvent.input(input, { target: { value: 'test@mail.com' } })
+    expect(gErrors).toEqual({ email: { email: 'is not an email' } })
+    expect(gFormValidity).toEqual(false)
+    fireEvent.input(input, { target: { value: 'test@mail.c' } })
+    expect(gErrors).toEqual({})
+    expect(gFormValidity).toEqual(true)
+  })
+  test('element validator  overrules builtIn and config validator', () => {
+    const config: Config = {
+      customValidators: {
+        email: (input: string): boolean =>
+          /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{1})+$/.test(input)
+      }
+    }
+    let gFormValidity = false
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not an email'
+                },
+                customValidators: {
+                  email: (input: string): boolean =>
+                    /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\.)+$/.test(input)
+                }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('email')
+    fireEvent.input(input, { target: { value: 'test@mail.com' } })
+    expect(gErrors).toEqual({ email: { email: 'is not an email' } })
+    expect(gFormValidity).toEqual(false)
+    fireEvent.input(input, { target: { value: 'test@mail.c' } })
+    expect(gErrors).toEqual({ email: { email: 'is not an email' } })
+    expect(gFormValidity).toEqual(false)
+    fireEvent.input(input, { target: { value: 'test@mail..' } })
+    expect(gErrors).toEqual({})
+    expect(gFormValidity).toEqual(true)
   })
 })

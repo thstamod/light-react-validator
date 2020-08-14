@@ -5,10 +5,10 @@ const checkForValidators = (
   configValidators: Config | null,
   builtInValidators: any,
   name: string,
-  data?: Rules
+  rules?: Rules
 ) => {
-  if (data?.customValidators?.[name]) {
-    return data.customValidators[name]
+  if (rules?.customValidators?.[name]) {
+    return rules.customValidators[name]
   }
   if (configValidators?.[name]) {
     return configValidators[name]
@@ -23,12 +23,17 @@ const checkForValidators = (
 export const getValidators = (
   configValidators: Config | null,
   builtInValidators: object,
-  data?: Rules
+  rules?: Rules
 ) => {
-  if (!data) return
+  if (!rules) return
   const f = {}
-  for (const key in data?.rules) {
-    const t = checkForValidators(configValidators, builtInValidators, key, data)
+  for (const key in rules?.rules) {
+    const t = checkForValidators(
+      configValidators,
+      builtInValidators,
+      key,
+      rules
+    )
     if (t) {
       f[key] = t
     }

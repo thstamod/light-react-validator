@@ -6,6 +6,9 @@ export default {
     if (typeof value === 'string') {
       return (value as string).trim().length > 0
     }
+    if (typeof value === 'number') {
+      return !!value
+    }
     if (
       value &&
       typeof value === 'object' &&
@@ -18,9 +21,9 @@ export default {
   email: (input: string): boolean =>
     /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
   minLength: (input: string, len: number): boolean =>
-    input.toString().length < len,
+    input.toString().length >= len,
   maxLength: (input: string, len: number): boolean =>
-    input.toString().length > len,
+    input.toString().length <= len,
   minCheckboxes: (input: any, availableOptions: any = null) => {
     if (
       typeof input === 'object' &&

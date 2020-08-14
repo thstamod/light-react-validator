@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, createRef } from 'react';
+import { useRef, useState, createRef } from 'react';
 
 const isEmpty = o => {
   if (Array.isArray(o)) {
@@ -16,6 +16,10 @@ var builtInValidators = {
       return value.trim().length > 0;
     }
 
+    if (typeof value === 'number') {
+      return !!value;
+    }
+
     if (value && typeof value === 'object' && !isEmpty(value)) {
       return true;
     }
@@ -23,8 +27,8 @@ var builtInValidators = {
     return false;
   },
   email: input => /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
-  minLength: (input, len) => input.toString().length < len,
-  maxLength: (input, len) => input.toString().length > len,
+  minLength: (input, len) => input.toString().length >= len,
+  maxLength: (input, len) => input.toString().length <= len,
   minCheckboxes: (input, availableOptions = null) => {
     if (typeof input === 'object' && isArray(input) && availableOptions && typeof availableOptions === 'number') {
       return input.length >= availableOptions;
@@ -34,11 +38,11 @@ var builtInValidators = {
   }
 };
 
-const checkForValidators = (configValidators, builtInValidators, name, data) => {
-  var _data$customValidator;
+const checkForValidators = (configValidators, builtInValidators, name, rules) => {
+  var _rules$customValidato;
 
-  if (data === null || data === void 0 ? void 0 : (_data$customValidator = data.customValidators) === null || _data$customValidator === void 0 ? void 0 : _data$customValidator[name]) {
-    return data.customValidators[name];
+  if (rules === null || rules === void 0 ? void 0 : (_rules$customValidato = rules.customValidators) === null || _rules$customValidato === void 0 ? void 0 : _rules$customValidato[name]) {
+    return rules.customValidators[name];
   }
 
   if (configValidators === null || configValidators === void 0 ? void 0 : configValidators[name]) {
@@ -52,12 +56,12 @@ const checkForValidators = (configValidators, builtInValidators, name, data) => 
   }
 };
 
-const getValidators = (configValidators, builtInValidators, data) => {
-  if (!data) return;
+const getValidators = (configValidators, builtInValidators, rules) => {
+  if (!rules) return;
   const f = {};
 
-  for (const key in data === null || data === void 0 ? void 0 : data.rules) {
-    const t = checkForValidators(configValidators, builtInValidators, key, data);
+  for (const key in rules === null || rules === void 0 ? void 0 : rules.rules) {
+    const t = checkForValidators(configValidators, builtInValidators, key, rules);
 
     if (t) {
       f[key] = t;
@@ -99,8 +103,6 @@ const useValidator = config => {
   const touchedElements = useRef(new Map());
   const dirtyElements = useRef(new Map());
   const errors = useRef({});
-  const customValidators = useRef(null);
-  const customConfiguration = useRef({});
   const triedToSubmit = useRef(false);
   const formValidity = useRef(true);
   const shouldRerender = useRef(false);
@@ -127,17 +129,6 @@ const useValidator = config => {
     fn();
   };
 
-  useEffect(() => {
-    if (config === null || config === void 0 ? void 0 : config.customValidators) {
-      customValidators.current = config.customValidators;
-    }
-
-    if (config === null || config === void 0 ? void 0 : config.validateFormOnSubmit) {
-      customConfiguration.current.validateFormOnSubmit = true;
-    }
-  }, []);
-  useEffect(() => {});
-
   const fieldValidation = elem => {
     let _isValid = true;
     const {
@@ -158,7 +149,6 @@ const useValidator = config => {
 
         const validator = validators[key];
         const availableOptions = options && options[key];
-        debugger;
         const value = type === 'text' ? (_elem$ref$current = elem.ref.current) === null || _elem$ref$current === void 0 ? void 0 : _elem$ref$current.value : getValue(!isEmpty(elem.group) ? elem.group : elem.ref);
 
         if (rules[key] && !validator(value, availableOptions)) {
@@ -226,7 +216,7 @@ const useValidator = config => {
       dirtyElements.current.set(ref.current, null);
     }
 
-    if (!triedToSubmit.current && customConfiguration.current.validateFormOnSubmit) return;
+    if (!triedToSubmit.current && (config === null || config === void 0 ? void 0 : config.validateFormOnSubmit)) return;
     const t = elements.current.get(name);
     fieldValidation(t);
   };
@@ -235,6 +225,7 @@ const useValidator = config => {
     var _ref$current2;
 
     e.stopPropagation();
+    if (!triedToSubmit.current && (config === null || config === void 0 ? void 0 : config.validateFormOnSubmit)) return;
     const name = (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.name;
     const t = ref.current && elements.current.get(name);
     fieldValidation(t);
@@ -260,7 +251,7 @@ const useValidator = config => {
       }
     }
 
-    const validators = getValidators(customValidators.current, builtInValidators, rules);
+    const validators = getValidators(config === null || config === void 0 ? void 0 : config.customValidators, builtInValidators, rules);
     const dataFields = elements.current.get(name) || {
       valid: true,
       ...(rules && {

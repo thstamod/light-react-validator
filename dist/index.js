@@ -36,6 +36,10 @@ var builtInValidators = {
       return value.trim().length > 0;
     }
 
+    if (typeof value === 'number') {
+      return !!value;
+    }
+
     if (value && typeof value === 'object' && !isEmpty(value)) {
       return true;
     }
@@ -46,10 +50,10 @@ var builtInValidators = {
     return /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input);
   },
   minLength: function minLength(input, len) {
-    return input.toString().length < len;
+    return input.toString().length >= len;
   },
   maxLength: function maxLength(input, len) {
-    return input.toString().length > len;
+    return input.toString().length <= len;
   },
   minCheckboxes: function minCheckboxes(input, availableOptions) {
     if (availableOptions === void 0) {
@@ -64,11 +68,11 @@ var builtInValidators = {
   }
 };
 
-var checkForValidators = function checkForValidators(configValidators, builtInValidators, name, data) {
-  var _data$customValidator;
+var checkForValidators = function checkForValidators(configValidators, builtInValidators, name, rules) {
+  var _rules$customValidato;
 
-  if (data === null || data === void 0 ? void 0 : (_data$customValidator = data.customValidators) === null || _data$customValidator === void 0 ? void 0 : _data$customValidator[name]) {
-    return data.customValidators[name];
+  if (rules === null || rules === void 0 ? void 0 : (_rules$customValidato = rules.customValidators) === null || _rules$customValidato === void 0 ? void 0 : _rules$customValidato[name]) {
+    return rules.customValidators[name];
   }
 
   if (configValidators === null || configValidators === void 0 ? void 0 : configValidators[name]) {
@@ -82,12 +86,12 @@ var checkForValidators = function checkForValidators(configValidators, builtInVa
   }
 };
 
-var getValidators = function getValidators(configValidators, builtInValidators, data) {
-  if (!data) return;
+var getValidators = function getValidators(configValidators, builtInValidators, rules) {
+  if (!rules) return;
   var f = {};
 
-  for (var key in data === null || data === void 0 ? void 0 : data.rules) {
-    var t = checkForValidators(configValidators, builtInValidators, key, data);
+  for (var key in rules === null || rules === void 0 ? void 0 : rules.rules) {
+    var t = checkForValidators(configValidators, builtInValidators, key, rules);
 
     if (t) {
       f[key] = t;
@@ -137,8 +141,6 @@ var useValidator = function useValidator(config) {
   var touchedElements = react.useRef(new Map());
   var dirtyElements = react.useRef(new Map());
   var errors = react.useRef({});
-  var customValidators = react.useRef(null);
-  var customConfiguration = react.useRef({});
   var triedToSubmit = react.useRef(false);
   var formValidity = react.useRef(true);
   var shouldRerender = react.useRef(false);
@@ -169,17 +171,6 @@ var useValidator = function useValidator(config) {
     };
   };
 
-  react.useEffect(function () {
-    if (config === null || config === void 0 ? void 0 : config.customValidators) {
-      customValidators.current = config.customValidators;
-    }
-
-    if (config === null || config === void 0 ? void 0 : config.validateFormOnSubmit) {
-      customConfiguration.current.validateFormOnSubmit = true;
-    }
-  }, []);
-  react.useEffect(function () {});
-
   var fieldValidation = function fieldValidation(elem) {
     var _isValid = true;
 
@@ -200,7 +191,6 @@ var useValidator = function useValidator(config) {
 
         var validator = validators[key];
         var availableOptions = options && options[key];
-        debugger;
         var value = type === 'text' ? (_elem$ref$current = elem.ref.current) === null || _elem$ref$current === void 0 ? void 0 : _elem$ref$current.value : getValue(!isEmpty(elem.group) ? elem.group : elem.ref);
 
         if (rules[key] && !validator(value, availableOptions)) {
@@ -267,7 +257,7 @@ var useValidator = function useValidator(config) {
         dirtyElements.current.set(ref.current, null);
       }
 
-      if (!triedToSubmit.current && customConfiguration.current.validateFormOnSubmit) return;
+      if (!triedToSubmit.current && (config === null || config === void 0 ? void 0 : config.validateFormOnSubmit)) return;
       var t = elements.current.get(name);
       fieldValidation(t);
     };
@@ -278,6 +268,7 @@ var useValidator = function useValidator(config) {
       var _ref$current2;
 
       e.stopPropagation();
+      if (!triedToSubmit.current && (config === null || config === void 0 ? void 0 : config.validateFormOnSubmit)) return;
       var name = (_ref$current2 = ref.current) === null || _ref$current2 === void 0 ? void 0 : _ref$current2.name;
       var t = ref.current && elements.current.get(name);
       fieldValidation(t);
@@ -306,7 +297,7 @@ var useValidator = function useValidator(config) {
       }
     }
 
-    var validators = getValidators(customValidators.current, builtInValidators, rules);
+    var validators = getValidators(config === null || config === void 0 ? void 0 : config.customValidators, builtInValidators, rules);
 
     var dataFields = elements.current.get(name) || _extends({
       valid: true

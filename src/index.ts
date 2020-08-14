@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, createRef, RefObject } from 'react'
+import { useRef, useState, createRef, RefObject } from 'react'
 import builtInValidators from './utils/builtIns'
 import { Config, UseValidator } from './types/configuration'
 import { DataField, Rules } from './types/fields'
@@ -14,8 +14,6 @@ export const useValidator = (config?: Config): UseValidator => {
   const touchedElements = useRef(new Map())
   const dirtyElements = useRef(new Map())
   const errors = useRef({})
-  const customValidators = useRef(null)
-  const customConfiguration = useRef<any>({})
   const triedToSubmit = useRef(false)
   const formValidity = useRef(true)
   const shouldRerender = useRef(false)
@@ -39,22 +37,7 @@ export const useValidator = (config?: Config): UseValidator => {
     fn()
   }
 
-  useEffect(() => {
-    if (config?.customValidators) {
-      customValidators.current = config.customValidators
-    }
-    if (config?.validateFormOnSubmit) {
-      customConfiguration.current.validateFormOnSubmit = true
-    }
-  }, [])
-
-  useEffect(() => {
-    // console.log(elements)
-  })
-
   const fieldValidation = (elem: DataField): void => {
-    // eslint-disable-next-line no-debugger
-    // debugger
     let _isValid = true
     const { fieldRules, validators, name, type } =
       elements.current.get(elem.name!) || {}
@@ -64,7 +47,7 @@ export const useValidator = (config?: Config): UseValidator => {
         const validator = validators[key]
         const availableOptions = options && options[key]
         // eslint-disable-next-line no-debugger
-        debugger
+        // debugger
         // TODO: refactor. it's not working correctly
         const value =
           type === 'text'
@@ -124,17 +107,14 @@ export const useValidator = (config?: Config): UseValidator => {
     if (!dirtyElements.current.has(ref.current)) {
       dirtyElements.current.set(ref.current, null)
     }
-    if (
-      !triedToSubmit.current &&
-      customConfiguration.current.validateFormOnSubmit
-    )
-      return
+    if (!triedToSubmit.current && config?.validateFormOnSubmit) return
     const t = elements.current.get(name!)
     fieldValidation(t!)
   }
 
   const detectChange = (ref: RefObject<HTMLInputElement>) => (e: Event) => {
     e.stopPropagation()
+    if (!triedToSubmit.current && config?.validateFormOnSubmit) return
     const name = ref.current?.name
     const t = ref.current && elements.current.get(name!)
     fieldValidation(t!)
@@ -161,8 +141,9 @@ export const useValidator = (config?: Config): UseValidator => {
         ref.current && ref.current.addEventListener('input', detectInput(ref))
       }
     }
+
     const validators = getValidators(
-      customValidators.current,
+      config?.customValidators,
       builtInValidators,
       rules
     )

@@ -1,9 +1,16 @@
 import React from 'react'
 import { serialize } from './serializeForm'
 import { useValidator } from 'light-react-validator'
+import { Config } from '../../dist/types/configuration'
 
 // const config = { validateFormOnSubmit: true }
-const config = {}
+// const config = {}
+const config: Config = {
+  customValidators: {
+    email: (input: string): boolean =>
+      /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{1})+$/.test(input)
+  }
+}
 
 const App = () => {
   console.log('rerender')
