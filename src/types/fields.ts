@@ -5,17 +5,15 @@ export type DataField = {
   type: string | undefined
   name: string | undefined
   checked?: boolean
-  group?: React.RefObject<HTMLInputElement>[]
-  ref: React.RefObject<HTMLInputElement>
+  group?: React.RefObject<Basic>[]
+  ref: React.RefObject<Basic>
 }
 
-export type BasicRef = {
-  name: string
-}
+export type Basic = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
 
 export type Rules = {
   rules: object
-  messages: object
+  messages?: object
   customValidators?: object
   options?: { [key: string]: any }
 }

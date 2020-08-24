@@ -1,24 +1,17 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { serialize } from './serializeForm'
 import { useValidator } from 'light-react-validator'
-import { Config } from '../../dist/types/configuration'
+import './main.css'
 
-// const config = { validateFormOnSubmit: true }
-// const config = {}
-const config: Config = {
-  customValidators: {
-    email: (input: string): boolean =>
-      /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{1})+$/.test(input)
-  }
-}
+// const config = { errorOnInvalidDefault: true }
+const config = {}
 
 const App = () => {
-  console.log('rerender')
+  const rerenders = useRef(0)
   const { track, submitForm, errors, formValidity } = useValidator(config)
+  console.log(`rerenders: ${rerenders.current} times`)
 
-  console.log('ERRORS', errors)
-  console.log('FORMVALIDITY', formValidity)
-
+  // console.log('ERRORS', errors)
   const submit = () => {
     console.log('submitted')
     var form = document.querySelector('form')
@@ -29,172 +22,247 @@ const App = () => {
     for (const key in errors) {
       if (errors.hasOwnProperty(key)) {
         const element = errors[key]
-        t.push(<span key={key}>{element}</span>)
+        t.push(
+          <span className='error' key={key}>
+            {element}
+          </span>
+        )
       }
     }
     return t
   }
 
   return (
-    <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
-      <label htmlFor='email'>email</label>
-      <input
-        ref={(elem) =>
-          track(elem, {
-            rules: { required: true, email: true },
-            messages: {
-              required: 'email is required',
-              email: 'is not an email'
+    <>
+      <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
+        <div className='form-group'>
+          <label htmlFor='email'>Email</label>
+          <input
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required'
+                  // email: 'is not an email'
+                }
+              })
             }
-          })
-        }
-        name='email'
-        onChange={(e) => console.log('original onChange ', e.target.value)}
-        onFocus={(e) => console.log('original onfocus ', e.target.value)}
-        type='text'
-        id='email'
-      />
-      {errors?.email && showErrors(errors.email)}
-      <br />
-      <label htmlFor='free'>free</label>
-      <input
-        ref={(elem) =>
-          track(elem, {
-            rules: { required: true },
-            messages: { required: 'free is required' }
-          })
-        }
-        name='free'
-        onChange={(e) => console.log('original onChange ', e.target.value)}
-        onFocus={(e) => console.log('original onfocus ', e.target.value)}
-        type='text'
-        id='free'
-      />
-      {errors?.free && showErrors(errors.free)}
-      <br />
-      <label htmlFor='noattach'>no attach</label>
-      <input
-        type='text'
-        id='noattach'
-        onChange={(e) => console.log('noattach ', e.target.value)}
-      />
-      <br />
-      <div>
-        <input
-          type='radio'
-          id='huey'
-          name='drone'
-          value='huey'
-          ref={(elem) =>
-            track(elem, {
-              rules: { required: true },
-              messages: {
-                required: 'radio is required'
-              }
-            })
-          }
-        />
-        <label htmlFor='huey'>Huey</label>
-      </div>
+            name='email'
+            onChange={(e) => console.log('original onChange ', e.target.value)}
+            onFocus={(e) => console.log('original onfocus ', e.target.value)}
+            type='text'
+            id='email'
+            defaultValue='test@test.gr'
+          />
+          {errors?.email && showErrors(errors.email)}
+        </div>
+        <div className='form-group'>
+          <label htmlFor='free'>Required</label>
+          <input
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: { required: 'free is required' }
+              })
+            }
+            name='free'
+            onChange={(e) => console.log('original onChange ', e.target.value)}
+            onFocus={(e) => console.log('original onfocus ', e.target.value)}
+            type='text'
+            id='free'
+          />
+          {errors?.free && showErrors(errors.free)}
+        </div>
+        <div className='form-group'>
+          <label>Radio buttons</label>
+          <div className='d-flex'>
+            <div className='radio-item'>
+              <input
+                type='radio'
+                id='huey'
+                name='drone'
+                value='huey'
+                ref={(elem) =>
+                  track(elem, {
+                    rules: { required: true },
+                    messages: {
+                      required: 'radio is required'
+                    }
+                  })
+                }
+              />
+              <label className='item-label' htmlFor='huey'>
+                Huey
+              </label>
+            </div>
 
-      <div>
-        <input
-          type='radio'
-          id='dewey'
-          name='drone'
-          value='dewey'
-          ref={(elem) =>
-            track(elem, {
-              rules: { required: true },
-              messages: {
-                required: 'radio is required'
-              }
-            })
-          }
-        />
-        <label htmlFor='dewey'>Dewey</label>
-      </div>
+            <div className='radio-item'>
+              <input
+                type='radio'
+                id='dewey'
+                name='drone'
+                value='dewey'
+                ref={(elem) =>
+                  track(elem, {
+                    rules: { required: true },
+                    messages: {
+                      required: 'radio is required'
+                    }
+                  })
+                }
+              />
+              <label className='item-label' htmlFor='dewey'>
+                Dewey
+              </label>
+            </div>
 
-      <div>
-        <input
-          type='radio'
-          id='louie'
-          name='drone'
-          value='louie'
-          ref={(elem) =>
-            track(elem, {
-              rules: { required: true },
-              messages: {
-                required: 'radio is required'
+            <div className='radio-item'>
+              <input
+                type='radio'
+                id='louie'
+                name='drone'
+                value='louie'
+                ref={(elem) =>
+                  track(elem, {
+                    rules: { required: true },
+                    messages: {
+                      required: 'radio is required'
+                    }
+                  })
+                }
+              />
+              <label className='item-label' htmlFor='louie'>
+                Louie
+              </label>
+            </div>
+          </div>
+          {errors?.drone && showErrors(errors.drone)}
+        </div>
+        <div className='form-group'>
+          <label>Single Checkbox</label>
+          <div className='full'>
+            <input
+              type='checkbox'
+              id='vehicle'
+              name='vehicle'
+              value='Bike'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'checkbox is required'
+                  }
+                })
               }
-            })
-          }
-        />
-        <label htmlFor='louie'>Louie</label>
+            />
+            <label className='item-label' htmlFor='vehicle'>
+              bike
+            </label>
+          </div>
+
+          {errors?.vehicle && showErrors(errors.vehicle)}
+        </div>
+        <div className='form-group'>
+          <label>Group checkboxes</label>
+          <div className='full'>
+            <div>
+              <input
+                type='checkbox'
+                id='vehicle2'
+                name='groupCheckbox'
+                value='Car'
+                ref={(elem) =>
+                  track(elem, {
+                    rules: { required: true, minCheckboxes: true },
+                    messages: {
+                      required: 'checkbox is required',
+                      minCheckboxes: 'you should check at least 2 checkboxes'
+                    },
+                    options: { minCheckboxes: 2 }
+                  })
+                }
+              />
+              <label className='item-label' htmlFor='vehicle2'>
+                car
+              </label>
+            </div>
+            <div>
+              <input
+                type='checkbox'
+                id='vehicle3'
+                name='groupCheckbox'
+                value='Boat'
+                ref={(elem) =>
+                  track(elem, {
+                    rules: { required: true },
+                    messages: {
+                      required: 'checkbox is required'
+                    }
+                  })
+                }
+              />
+              <label className='item-label' htmlFor='vehicle3'>
+                boat
+              </label>
+            </div>
+          </div>
+
+          {errors?.groupCheckbox && showErrors(errors.groupCheckbox)}
+        </div>
+        <div className='form-group'>
+          <label htmlFor='number'>Number</label>
+          <input
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'number is required'
+                  // email: 'is not an email'
+                }
+              })
+            }
+            name='number'
+            onChange={(e) => console.log('original onChange ', e.target.value)}
+            onFocus={(e) => console.log('original onfocus ', e.target.value)}
+            type='number'
+            id='number'
+          />
+          {errors?.number && showErrors(errors.number)}
+        </div>
+
+        <div className='form-group'>
+          <label htmlFor='select'>Select</label>
+          <select
+            name='select'
+            id='cars'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'select is required'
+                }
+              })
+            }
+          >
+            <option value=''>select an option</option>
+            <option value='volvo'>Volvo</option>
+            <option value='saab'>Saab</option>
+            <option value='mercedes'>Mercedes</option>
+            <option value='audi'>Audi</option>
+          </select>
+          <br />
+          {errors?.select && showErrors(errors.select)}
+        </div>
+        <div className='wrapper-button'>
+          <button disabled={!formValidity} type='submit'>
+            Submit
+          </button>
+        </div>
+      </form>
+      <div className='rerender-label'>
+        <label>{`rerenders ${rerenders.current++} times`}</label>
       </div>
-      {errors?.drone && showErrors(errors.drone)}
-      <br />
-      <div>
-        <input
-          type='checkbox'
-          id='vehicle'
-          name='vehicle'
-          value='Bike'
-          ref={(elem) =>
-            track(elem, {
-              rules: { required: true },
-              messages: {
-                required: 'checkbox is required'
-              }
-            })
-          }
-        />
-        <label htmlFor='vehicle'>bike</label>
-        {errors?.vehicle && showErrors(errors.vehicle)}
-        <br />
-        Group
-        <br />
-        <input
-          type='checkbox'
-          id='vehicle2'
-          name='groupCheckbox'
-          value='Car'
-          ref={(elem) =>
-            track(elem, {
-              rules: { required: true, minCheckboxes: true },
-              messages: {
-                required: 'checkbox is required',
-                minCheckboxes: 'you should check at least 2 checkboxes'
-              },
-              options: { minCheckboxes: 2 }
-            })
-          }
-        />
-        <label htmlFor='vehicle2'>car</label>
-        <br />
-        <input
-          type='checkbox'
-          id='vehicle3'
-          name='groupCheckbox'
-          value='Boat'
-          ref={(elem) =>
-            track(elem, {
-              rules: { required: true },
-              messages: {
-                required: 'checkbox is required'
-              }
-            })
-          }
-        />
-        <label htmlFor='vehicle3'>boat</label>
-        <br />
-        {errors?.groupCheckbox && showErrors(errors.groupCheckbox)}
-        <br />
-      </div>
-      <button disabled={!formValidity} type='submit'>
-        submit
-      </button>
-    </form>
+    </>
   )
 }
 

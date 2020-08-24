@@ -1,0 +1,130 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@300;400;600&display=swap');
+*,
+*:before,
+*:after {
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+
+body,
+html {
+  font-family: 'Nunito', sans-serif;
+  background-color: #ffffff;
+  color: #ffffff;
+}
+
+form {
+  max-width: 300px;
+  margin: 10px auto;
+  padding: 10px 20px;
+  background: #211f1f;
+  border-radius: 8px;
+}
+
+h1 {
+  margin: 0 0 30px 0;
+  text-align: center;
+}
+.form-group {
+  margin-bottom: 12px;
+}
+.d-flex {
+  display: flex;
+  justify-content: space-between;
+}
+input[type='text'],
+input[type='password'],
+input[type='date'],
+input[type='datetime'],
+input[type='email'],
+input[type='number'],
+input[type='search'],
+input[type='tel'],
+input[type='time'],
+input[type='url'],
+textarea,
+select {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  font-size: 15px;
+  height: auto;
+  margin: 0;
+  outline: 0;
+  padding: 8px;
+  width: 100%;
+  width: 100%;
+  background-color: #f8f4e3;
+  color: #211f1f;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.03) inset;
+}
+
+.radio-item {
+  display: flex;
+  flex-flow: column;
+  align-items: center;
+}
+.full {
+  display: block;
+}
+input[type='radio'],
+input[type='checkbox'] {
+  margin: 0 4px 8px 0;
+}
+.item-label {
+  display: inline;
+  font-weight: 400;
+}
+select {
+  padding: 6px;
+  height: 32px;
+  border-radius: 2px;
+}
+.error {
+  display: block;
+  color: #e40408;
+  font-size: 12px;
+}
+
+.wrapper-button {
+  display: flex;
+  justify-content: center;
+}
+button {
+  padding: 10px 40px 10px 40px;
+  color: #fff;
+  background-color: #a833b9;
+  font-size: 16px;
+  text-align: center;
+  font-style: normal;
+  border-radius: 5px;
+  border-width: 1px 1px 3px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  border-color: transparent;
+}
+button:disabled {
+  background-color: #9ea3b0;
+  cursor: default;
+}
+
+button:focus {
+  outline: none;
+}
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+.rerender-label {
+  width: 300px;
+  margin: 0 auto;
+  padding: 0 20px;
+  color: #211f1f;
+  text-align: center;
+}
+@media screen and (min-width: 480px) {
+  form {
+    max-width: 480px;
+  }
+}

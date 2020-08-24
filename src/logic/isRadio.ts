@@ -1,1 +1,3 @@
-export const isRadio = (ref: HTMLInputElement) => ref.type === 'radio'
+import { Basic } from '../types/fields'
+
+export const isRadio = (ref: Basic) => ref.type === 'radio'

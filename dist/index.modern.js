@@ -1,4 +1,4 @@
-import { useRef, useState, createRef } from 'react';
+import { useRef, useState, useEffect, createRef } from 'react';
 
 const isEmpty = o => {
   if (Array.isArray(o)) {
@@ -27,8 +27,20 @@ var builtInValidators = {
     return false;
   },
   email: input => /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input),
-  minLength: (input, len) => input.toString().length >= len,
-  maxLength: (input, len) => input.toString().length <= len,
+  minLength: (input, len) => {
+    if (!len) {
+      console.warn('length is not provided');
+    }
+
+    return input.toString().length >= len;
+  },
+  maxLength: (input, len) => {
+    if (!len) {
+      console.warn('length is not provided');
+    }
+
+    return input.toString().length <= len;
+  },
   minCheckboxes: (input, availableOptions = null) => {
     if (typeof input === 'object' && isArray(input) && availableOptions && typeof availableOptions === 'number') {
       return input.length >= availableOptions;
@@ -77,7 +89,7 @@ const hasNameAttribute = ref => {
   if (name) {
     return name;
   } else {
-    console.warn(`the field ${ref.outerHTML} must have a unique name attribute`);
+    console.warn(`the field @ ${ref.outerHTML} must have a unique name attribute`);
     return undefined;
   }
 };
@@ -86,16 +98,57 @@ const isRadio = ref => ref.type === 'radio';
 
 const isCheckbox = ref => ref.type === 'checkbox';
 
-const getValue = (v, _type) => {
-  if (isArray(v)) {
-    return v.filter(e => e.current.checked).map(e => e.current.value);
+const getValue = v => {
+  if (v.type === 'checkbox' || v.type === 'radio') {
+    if (!v.ref) {
+      if (!isEmpty(v.group) && isArray(v.group)) {
+        return v.group.filter(e => e.current.checked).map(e => e.current.value);
+      }
+    } else {
+      if (v.ref.current && v.ref.current.checked) {
+        return v.ref.current.value;
+      } else {
+        return null;
+      }
+    }
   }
 
-  if (v.current.checked) {
-    return v.current.value;
+  if (v.ref.current) {
+    return v.ref.current.value;
   }
 
   return null;
+};
+
+const isEmptyValue = v => {
+  if (typeof v === 'object' && v !== null) {
+    return isEmpty(v);
+  }
+
+  if (typeof v === 'number') {
+    return !(v || v === 0);
+  }
+
+  if (typeof v === 'string') {
+    return !v.trim();
+  }
+
+  if (v) {
+    return false;
+  }
+
+  return true;
+};
+
+const getHierarchyProperties = (inputOptions = null, globalOptions = null, key) => (inputOptions === null || inputOptions === void 0 ? void 0 : inputOptions[key]) || (globalOptions === null || globalOptions === void 0 ? void 0 : globalOptions[key]) || undefined;
+
+const throwWarning = value => warning => {
+  if (!value) console.warn(warning);
+  return value;
+};
+
+const hasKey = (obj, key) => {
+  return obj && key in obj;
 };
 
 const useValidator = config => {
@@ -129,13 +182,22 @@ const useValidator = config => {
     fn();
   };
 
+  useEffect(() => {
+    elements.current.forEach(value => {
+      const val = getValue(value);
+      if (isEmptyValue(val)) return;
+      fieldValidation(value);
+    });
+  }, []);
+
   const fieldValidation = elem => {
     let _isValid = true;
+    const previousErrorState = { ...errors.current
+    };
     const {
       fieldRules,
       validators,
-      name,
-      type
+      name
     } = elements.current.get(elem.name) || {};
     const {
       rules,
@@ -145,28 +207,19 @@ const useValidator = config => {
 
     if (rules && name) {
       for (const key in validators) {
-        var _elem$ref$current;
-
         const validator = validators[key];
-        const availableOptions = options && options[key];
-        const value = type === 'text' ? (_elem$ref$current = elem.ref.current) === null || _elem$ref$current === void 0 ? void 0 : _elem$ref$current.value : getValue(!isEmpty(elem.group) ? elem.group : elem.ref);
+        const availableOptions = getHierarchyProperties(options, config === null || config === void 0 ? void 0 : config.globalOptions, key);
+        const value = getValue(elem);
 
         if (rules[key] && !validator(value, availableOptions)) {
-          var _errors$current, _errors$current$name;
+          var _errors$current;
 
           _isValid = false;
-          if ((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? void 0 : _errors$current$name[key]) continue;
+          if (hasKey((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : _errors$current[name], key)) continue;
           shouldRerender.current = true;
-
-          if (name in errors.current) {
-            errors.current[name][key] = messages === null || messages === void 0 ? void 0 : messages[key];
-          } else {
-            errors.current[name] = {
-              [key]: messages === null || messages === void 0 ? void 0 : messages[key],
-              ...errors.current[name]
-            };
-          }
-
+          const errorMsg = throwWarning(getHierarchyProperties(messages, config === null || config === void 0 ? void 0 : config.globalMessages, key))(`no @ ${key} error message anywhere for ${name} input.`);
+          errors.current[name] = errors.current[name] || {};
+          errors.current[name][key] = errorMsg;
           elements.current.set(name, { ...elements.current.get(name),
             valid: false
           });
@@ -195,7 +248,7 @@ const useValidator = config => {
       formValidity.current = false;
     }
 
-    if (isEmpty(errors.current)) {
+    if (isEmpty(errors.current) && !isEmpty(previousErrorState)) {
       shouldRerender.current = true;
       formValidity.current = true;
     }
@@ -232,7 +285,7 @@ const useValidator = config => {
   };
 
   const track = (elem, rules) => {
-    var _ref$current3;
+    var _ref$current4;
 
     if (!elem) return;
     const ref = createRef();
@@ -243,7 +296,9 @@ const useValidator = config => {
     const e = elements.current.get(name);
 
     if (!elements.current.has(name) || !((e === null || e === void 0 ? void 0 : e.group) && e.group.some(elem => elem.current === ref.current))) {
-      if (isRadio(ref.current) || isCheckbox(ref.current)) {
+      var _ref$current3;
+
+      if (isRadio(ref.current) || isCheckbox(ref.current) || ((_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type) === 'range') {
         ref.current && ref.current.addEventListener('change', detectChange(ref));
       } else {
         ref.current && ref.current.addEventListener('focus', detectTouch(ref));
@@ -260,7 +315,7 @@ const useValidator = config => {
       ...(validators && {
         validators
       }),
-      type: (_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type,
+      type: (_ref$current4 = ref.current) === null || _ref$current4 === void 0 ? void 0 : _ref$current4.type,
       name: name,
       ...(isRadioOrCheckbox && {
         checked: false
@@ -286,7 +341,9 @@ const useValidator = config => {
   };
 
   const detectTouch = ref => () => {
-    touchedElements.current.set(ref, null);
+    var _ref$current5;
+
+    touchedElements.current.set((_ref$current5 = ref.current) === null || _ref$current5 === void 0 ? void 0 : _ref$current5.name, null);
     ref.current && ref.current.removeEventListener('focus', detectTouch(ref), true);
   };
 

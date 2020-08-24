@@ -1,1 +1,3 @@
-export const isCheckbox = (ref: HTMLInputElement) => ref.type === 'checkbox'
+import { Basic } from '../types/fields'
+
+export const isCheckbox = (ref: Basic) => ref.type === 'checkbox'

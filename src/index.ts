@@ -1,13 +1,17 @@
-import { useRef, useState, createRef, RefObject } from 'react'
+import { useRef, useState, createRef, RefObject, useEffect } from 'react'
 import builtInValidators from './utils/builtIns'
 import { Config, UseValidator } from './types/configuration'
-import { DataField, Rules } from './types/fields'
+import { DataField, Rules, Basic } from './types/fields'
 import { getValidators } from './logic/checkValidators'
 import { hasNameAttribute } from './logic/hasNameAttribute'
 import { isRadio } from './logic/isRadio'
 import { isEmpty } from './logic/isEmpty'
 import { isCheckbox } from './logic/isCheckbox'
 import { getValue } from './logic/getValue'
+import { isEmptyValue } from './logic/isEmptyValue'
+import { getHierarchyProperties } from './logic/getHierarchyProperties'
+import { throwWarning } from './logic/throwWarning'
+import { hasKey } from './logic/hasKey'
 
 export const useValidator = (config?: Config): UseValidator => {
   const elements = useRef<Map<string, DataField>>(new Map())
@@ -37,36 +41,43 @@ export const useValidator = (config?: Config): UseValidator => {
     fn()
   }
 
+  useEffect(() => {
+    elements.current.forEach((value: DataField) => {
+      const val = getValue(value)
+      if (isEmptyValue(val)) return
+      fieldValidation(value)
+    })
+  }, [])
+
   const fieldValidation = (elem: DataField): void => {
     let _isValid = true
-    const { fieldRules, validators, name, type } =
+    const previousErrorState = { ...errors.current }
+    const { fieldRules, validators, name } =
       elements.current.get(elem.name!) || {}
     const { rules, messages, options } = fieldRules || {}
+
     if (rules && name) {
       for (const key in validators) {
         const validator = validators[key]
-        const availableOptions = options && options[key]
-        // eslint-disable-next-line no-debugger
-        // debugger
-        // TODO: refactor. it's not working correctly
-        const value =
-          type === 'text'
-            ? elem.ref.current?.value
-            : // TODO: should this returns number instead of boolean
-              getValue(!isEmpty(elem.group!) ? elem.group : elem.ref, type!)
-        // console.log(value)
+        const availableOptions = getHierarchyProperties(
+          options,
+          config?.globalOptions,
+          key
+        )
+        const value = getValue(elem)
         if (rules[key] && !validator(value, availableOptions)) {
           _isValid = false
-          if (errors.current?.[name]?.[key]) continue
+          if (hasKey(errors.current?.[name], key)) continue
           shouldRerender.current = true
-          if (name in errors.current) {
-            errors.current[name][key] = messages?.[key]
-          } else {
-            errors.current[name] = {
-              [key]: messages?.[key],
-              ...errors.current[name]
-            }
-          }
+          // TODO: when message is missing rerenders multiple times
+          const errorMsg = throwWarning(
+            getHierarchyProperties(messages, config?.globalMessages, key)
+          )(`no @ ${key} error message anywhere for ${name} input.`)
+          // TODO: with below code is not working properly.
+          // if (!errorMsg) return
+
+          errors.current[name] = errors.current[name] || {}
+          errors.current[name][key] = errorMsg
           elements.current.set(name, {
             ...(elements.current.get(name) as DataField),
             valid: false
@@ -90,7 +101,7 @@ export const useValidator = (config?: Config): UseValidator => {
       formValidity.current = false
     }
 
-    if (isEmpty(errors.current)) {
+    if (isEmpty(errors.current) && !isEmpty(previousErrorState)) {
       shouldRerender.current = true
       formValidity.current = true
     }
@@ -101,7 +112,7 @@ export const useValidator = (config?: Config): UseValidator => {
     }
   }
 
-  const detectInput = (ref: RefObject<HTMLInputElement>) => (e: Event) => {
+  const detectInput = (ref: RefObject<Basic>) => (e: Event) => {
     e.stopPropagation()
     const name = ref.current?.name
     if (!dirtyElements.current.has(ref.current)) {
@@ -112,7 +123,7 @@ export const useValidator = (config?: Config): UseValidator => {
     fieldValidation(t!)
   }
 
-  const detectChange = (ref: RefObject<HTMLInputElement>) => (e: Event) => {
+  const detectChange = (ref: RefObject<Basic>) => (e: Event) => {
     e.stopPropagation()
     if (!triedToSubmit.current && config?.validateFormOnSubmit) return
     const name = ref.current?.name
@@ -120,11 +131,11 @@ export const useValidator = (config?: Config): UseValidator => {
     fieldValidation(t!)
   }
 
-  const track = (elem: HTMLInputElement, rules?: Rules): void => {
+  const track = (elem: Basic, rules?: Rules): void => {
     if (!elem) return
 
-    const ref = createRef<HTMLInputElement>()
-    ;(ref as React.MutableRefObject<HTMLInputElement>).current = elem
+    const ref = createRef<Basic>()
+    ;(ref as React.MutableRefObject<Basic>).current = elem
     const name = hasNameAttribute(ref.current!)
     if (!name) return
     const isRadioOrCheckbox = isRadio(ref.current!) || isCheckbox(ref.current!)
@@ -134,7 +145,11 @@ export const useValidator = (config?: Config): UseValidator => {
       !elements.current.has(name) ||
       !(e?.group && e.group.some((elem) => elem.current === ref.current))
     ) {
-      if (isRadio(ref.current!) || isCheckbox(ref.current!)) {
+      if (
+        isRadio(ref.current!) ||
+        isCheckbox(ref.current!) ||
+        ref.current?.type === 'range'
+      ) {
         ref.current && ref.current.addEventListener('change', detectChange(ref))
       } else {
         ref.current && ref.current.addEventListener('focus', detectTouch(ref))
@@ -174,8 +189,8 @@ export const useValidator = (config?: Config): UseValidator => {
     elements.current.set(name, dataFields)
   }
 
-  const detectTouch = (ref: RefObject<HTMLInputElement>) => () => {
-    touchedElements.current.set(ref, null)
+  const detectTouch = (ref: RefObject<Basic>) => () => {
+    touchedElements.current.set(ref.current?.name, null)
     ref.current &&
       ref.current.removeEventListener('focus', detectTouch(ref), true)
   }

@@ -1,12 +1,15 @@
-import { Rules } from './fields'
+import { Rules, Basic } from './fields'
 
 export type Config = {
   customValidators?: any
   validateFormOnSubmit?: boolean
+  errorOnInvalidDefault?: boolean
+  globalOptions?: any
+  globalMessages?: any
 }
 
 export type UseValidator = {
-  track(ref: HTMLInputElement | null, rules?: Rules): void
+  track(ref: Basic | null, rules?: Rules): void
   submitForm(fn: Function): Function
   errors: any
   formValidity: boolean

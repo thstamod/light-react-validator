@@ -50,9 +50,17 @@ var builtInValidators = {
     return /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input);
   },
   minLength: function minLength(input, len) {
+    if (!len) {
+      console.warn('length is not provided');
+    }
+
     return input.toString().length >= len;
   },
   maxLength: function maxLength(input, len) {
+    if (!len) {
+      console.warn('length is not provided');
+    }
+
     return input.toString().length <= len;
   },
   minCheckboxes: function minCheckboxes(input, availableOptions) {
@@ -107,7 +115,7 @@ var hasNameAttribute = function hasNameAttribute(ref) {
   if (name) {
     return name;
   } else {
-    console.warn("the field " + ref.outerHTML + " must have a unique name attribute");
+    console.warn("the field @ " + ref.outerHTML + " must have a unique name attribute");
     return undefined;
   }
 };
@@ -120,20 +128,75 @@ var isCheckbox = function isCheckbox(ref) {
   return ref.type === 'checkbox';
 };
 
-var getValue = function getValue(v, _type) {
-  if (isArray(v)) {
-    return v.filter(function (e) {
-      return e.current.checked;
-    }).map(function (e) {
-      return e.current.value;
-    });
+var getValue = function getValue(v) {
+  if (v.type === 'checkbox' || v.type === 'radio') {
+    if (!v.ref) {
+      if (!isEmpty(v.group) && isArray(v.group)) {
+        return v.group.filter(function (e) {
+          return e.current.checked;
+        }).map(function (e) {
+          return e.current.value;
+        });
+      }
+    } else {
+      if (v.ref.current && v.ref.current.checked) {
+        return v.ref.current.value;
+      } else {
+        return null;
+      }
+    }
   }
 
-  if (v.current.checked) {
-    return v.current.value;
+  if (v.ref.current) {
+    return v.ref.current.value;
   }
 
   return null;
+};
+
+var isEmptyValue = function isEmptyValue(v) {
+  if (typeof v === 'object' && v !== null) {
+    return isEmpty(v);
+  }
+
+  if (typeof v === 'number') {
+    return !(v || v === 0);
+  }
+
+  if (typeof v === 'string') {
+    return !v.trim();
+  }
+
+  if (v) {
+    return false;
+  }
+
+  return true;
+};
+
+var getHierarchyProperties = function getHierarchyProperties(inputOptions, globalOptions, key) {
+  var _inputOptions, _globalOptions;
+
+  if (inputOptions === void 0) {
+    inputOptions = null;
+  }
+
+  if (globalOptions === void 0) {
+    globalOptions = null;
+  }
+
+  return ((_inputOptions = inputOptions) === null || _inputOptions === void 0 ? void 0 : _inputOptions[key]) || ((_globalOptions = globalOptions) === null || _globalOptions === void 0 ? void 0 : _globalOptions[key]) || undefined;
+};
+
+var throwWarning = function throwWarning(value) {
+  return function (warning) {
+    if (!value) console.warn(warning);
+    return value;
+  };
+};
+
+var hasKey = function hasKey(obj, key) {
+  return obj && key in obj;
 };
 
 var useValidator = function useValidator(config) {
@@ -171,14 +234,23 @@ var useValidator = function useValidator(config) {
     };
   };
 
+  react.useEffect(function () {
+    elements.current.forEach(function (value) {
+      var val = getValue(value);
+      if (isEmptyValue(val)) return;
+      fieldValidation(value);
+    });
+  }, []);
+
   var fieldValidation = function fieldValidation(elem) {
     var _isValid = true;
+
+    var previousErrorState = _extends({}, errors.current);
 
     var _ref = elements.current.get(elem.name) || {},
         fieldRules = _ref.fieldRules,
         validators = _ref.validators,
-        name = _ref.name,
-        type = _ref.type;
+        name = _ref.name;
 
     var _ref2 = fieldRules || {},
         rules = _ref2.rules,
@@ -187,27 +259,19 @@ var useValidator = function useValidator(config) {
 
     if (rules && name) {
       for (var key in validators) {
-        var _elem$ref$current;
-
         var validator = validators[key];
-        var availableOptions = options && options[key];
-        var value = type === 'text' ? (_elem$ref$current = elem.ref.current) === null || _elem$ref$current === void 0 ? void 0 : _elem$ref$current.value : getValue(!isEmpty(elem.group) ? elem.group : elem.ref);
+        var availableOptions = getHierarchyProperties(options, config === null || config === void 0 ? void 0 : config.globalOptions, key);
+        var value = getValue(elem);
 
         if (rules[key] && !validator(value, availableOptions)) {
-          var _errors$current, _errors$current$name;
+          var _errors$current;
 
           _isValid = false;
-          if ((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : (_errors$current$name = _errors$current[name]) === null || _errors$current$name === void 0 ? void 0 : _errors$current$name[key]) continue;
+          if (hasKey((_errors$current = errors.current) === null || _errors$current === void 0 ? void 0 : _errors$current[name], key)) continue;
           shouldRerender.current = true;
-
-          if (name in errors.current) {
-            errors.current[name][key] = messages === null || messages === void 0 ? void 0 : messages[key];
-          } else {
-            var _extends2;
-
-            errors.current[name] = _extends((_extends2 = {}, _extends2[key] = messages === null || messages === void 0 ? void 0 : messages[key], _extends2), errors.current[name]);
-          }
-
+          var errorMsg = throwWarning(getHierarchyProperties(messages, config === null || config === void 0 ? void 0 : config.globalMessages, key))("no @ " + key + " error message anywhere for " + name + " input.");
+          errors.current[name] = errors.current[name] || {};
+          errors.current[name][key] = errorMsg;
           elements.current.set(name, _extends({}, elements.current.get(name), {
             valid: false
           }));
@@ -235,7 +299,7 @@ var useValidator = function useValidator(config) {
       formValidity.current = false;
     }
 
-    if (isEmpty(errors.current)) {
+    if (isEmpty(errors.current) && !isEmpty(previousErrorState)) {
       shouldRerender.current = true;
       formValidity.current = true;
     }
@@ -276,7 +340,7 @@ var useValidator = function useValidator(config) {
   };
 
   var track = function track(elem, rules) {
-    var _ref$current3;
+    var _ref$current4;
 
     if (!elem) return;
     var ref = react.createRef();
@@ -289,7 +353,9 @@ var useValidator = function useValidator(config) {
     if (!elements.current.has(name) || !((e === null || e === void 0 ? void 0 : e.group) && e.group.some(function (elem) {
       return elem.current === ref.current;
     }))) {
-      if (isRadio(ref.current) || isCheckbox(ref.current)) {
+      var _ref$current3;
+
+      if (isRadio(ref.current) || isCheckbox(ref.current) || ((_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type) === 'range') {
         ref.current && ref.current.addEventListener('change', detectChange(ref));
       } else {
         ref.current && ref.current.addEventListener('focus', detectTouch(ref));
@@ -306,7 +372,7 @@ var useValidator = function useValidator(config) {
     }, validators && {
       validators: validators
     }, {
-      type: (_ref$current3 = ref.current) === null || _ref$current3 === void 0 ? void 0 : _ref$current3.type,
+      type: (_ref$current4 = ref.current) === null || _ref$current4 === void 0 ? void 0 : _ref$current4.type,
       name: name
     }, isRadioOrCheckbox && {
       checked: false
@@ -334,7 +400,9 @@ var useValidator = function useValidator(config) {
 
   var detectTouch = function detectTouch(ref) {
     return function () {
-      touchedElements.current.set(ref, null);
+      var _ref$current5;
+
+      touchedElements.current.set((_ref$current5 = ref.current) === null || _ref$current5 === void 0 ? void 0 : _ref$current5.name, null);
       ref.current && ref.current.removeEventListener('focus', detectTouch(ref), true);
     };
   };

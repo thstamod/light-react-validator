@@ -1,9 +1,10 @@
 import '@testing-library/jest-dom'
 import React from 'react'
-import { render, fireEvent, cleanup } from '@testing-library/react'
+import { render, fireEvent, cleanup, screen } from '@testing-library/react'
 import { renderHook } from '@testing-library/react-hooks'
+import { act } from 'react-dom/test-utils'
+import userEvent from '@testing-library/user-event'
 import { useValidator } from '.'
-import { DEFAULT_MIN_VERSION } from 'tls'
 import { Config } from './types/configuration'
 
 afterEach(cleanup)
@@ -144,6 +145,91 @@ describe('useValidator individual inputs', () => {
     expect(res).toEqual({
       email: { required: 'email is required', email: 'is not an email' }
     })
+  })
+  test('show min length', () => {
+    let gErrors = {}
+    let gFormValidity = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, minLength: true },
+                messages: {
+                  required: 'free is required',
+                  minLength: 'min is 2'
+                },
+                options: { minLength: 2 }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('free')
+    fireEvent.input(input, { target: { value: 'G' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      free: { minLength: 'min is 2' }
+    })
+    fireEvent.input(input, { target: { value: 'Ga' } })
+    expect(gFormValidity).toEqual(true)
+    expect(gErrors).toEqual({})
+  })
+  test('textArea max length and required', () => {
+    let gErrors = {}
+    let gFormValidity = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <textarea
+            id='textarea'
+            name='textarea'
+            aria-label='textarea'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, maxLength: true },
+                messages: {
+                  required: 'textarea is required',
+                  maxLength: 'max is 5'
+                },
+                options: { maxLength: 5 }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('textarea')
+    fireEvent.input(input, { target: { value: 'G' } })
+    fireEvent.input(input, { target: { value: '' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      textarea: { required: 'textarea is required' }
+    })
+    fireEvent.input(input, { target: { value: 'Galileo' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      textarea: { maxLength: 'max is 5' }
+    })
+    fireEvent.input(input, { target: { value: 'Gal' } })
+    expect(gFormValidity).toEqual(true)
+    expect(gErrors).toEqual({})
   })
 })
 
@@ -1057,7 +1143,261 @@ describe('useValidator checkbox', () => {
   })
 })
 
-describe('builtIn Validators', () => {})
+describe('useValidator select', () => {
+  test('select unselect throw an error', () => {
+    let gErrors = {}
+    let gFormValidity = false
+    const Component = () => {
+      const config = {}
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <label htmlFor='select'>Choose a car:</label>
+          <select
+            data-testid='select'
+            name='select'
+            id='cars'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'select is required'
+                }
+              })
+            }
+          >
+            <option value=''>select an option</option>
+            <option value='volvo'>Volvo</option>
+            <option value='saab'>Saab</option>
+            <option value='mercedes'>Mercedes</option>
+            <option value='audi'>Audi</option>
+          </select>
+          <button type='submit'>submit</button>
+        </div>
+      )
+    }
+
+    render(<Component />)
+    const select = screen.getByTestId('select')
+    act(() => userEvent.selectOptions(select, 'audi'))
+    expect(gFormValidity).toEqual(true)
+    act(() => userEvent.selectOptions(select, ''))
+
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({ select: { required: 'select is required' } })
+  })
+  test('select unselect throw an error on submit', () => {
+    let gErrors = {}
+    let gFormValidity = false
+    const Component = () => {
+      const config = {}
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <form onSubmit={(e) => submitForm(() => {})(e)}>
+          <label htmlFor='select'>Choose a car:</label>
+          <select
+            data-testid='select'
+            name='select'
+            id='cars'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'select is required'
+                }
+              })
+            }
+          >
+            <option data-testid='select-option-default' value=''>
+              select an option
+            </option>
+            <option value='volvo'>Volvo</option>
+            <option value='saab'>Saab</option>
+            <option value='mercedes'>Mercedes</option>
+            <option data-testid='select-option' value='audi'>
+              Audi
+            </option>
+          </select>
+          <button type='submit'>submit</button>
+        </form>
+      )
+    }
+
+    const t = render(<Component />)
+    const select = screen.getByTestId('select')
+    const submitBtn = t.getByText(/submit/i)
+    fireEvent.click(submitBtn)
+    expect(gFormValidity).toEqual(false)
+    act(() => userEvent.selectOptions(select, 'audi'))
+    expect(gFormValidity).toEqual(true)
+    act(() => userEvent.selectOptions(select, ''))
+    fireEvent.click(submitBtn)
+
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({ select: { required: 'select is required' } })
+  })
+})
+
+describe('default values', () => {
+  test('if default value is invalid rise an error', () => {
+    let gErrors = {}
+    let gFormValidity = false
+    const Component = () => {
+      const config = { errorOnInvalidDefault: true }
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not a valid email'
+                }
+              })
+            }
+            defaultValue='test@test.'
+          />
+        </div>
+      )
+    }
+
+    render(<Component />)
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({ email: { email: 'is not a valid email' } })
+  })
+  test('2 inputs which one has default invalid value', () => {
+    let gErrors = {}
+    let gFormValidity = false
+    const Component = () => {
+      const config = { errorOnInvalidDefault: true }
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not a valid email'
+                }
+              })
+            }
+            defaultValue='test@test.'
+          />
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'free is required'
+                }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    render(<Component />)
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({ email: { email: 'is not a valid email' } })
+  })
+  test('2 inputs which one has default invalid value and the other is checkbox with min checks', () => {
+    let gErrors = {}
+    let gFormValidity = false
+    const Component = () => {
+      const config = { errorOnInvalidDefault: true }
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                  email: 'is not a valid email'
+                }
+              })
+            }
+            defaultValue='test@test.'
+          />
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle1'
+              name='vehicle'
+              value='Bike31'
+              aria-label='checkbox1'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true, minCheckboxes: true },
+                  messages: {
+                    required: 'checkbox is required',
+                    minCheckboxes: 'you should check at least 2 checkboxes'
+                  },
+                  options: { minCheckboxes: 2 }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+          <div>
+            <input
+              type='checkbox'
+              id='vehicle2'
+              name='vehicle'
+              value='Bike32'
+              aria-label='checkbox2'
+              ref={(elem) =>
+                track(elem, {
+                  rules: { required: true },
+                  messages: {
+                    required: 'checkbox is required'
+                  }
+                })
+              }
+            />
+            <label htmlFor='vehicle'>bike</label>
+          </div>
+        </div>
+      )
+    }
+
+    render(<Component />)
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({ email: { email: 'is not a valid email' } })
+  })
+})
 
 describe('rules hierarchy', () => {
   test('config validator overrules builtIn', () => {
@@ -1103,7 +1443,7 @@ describe('rules hierarchy', () => {
     expect(gErrors).toEqual({})
     expect(gFormValidity).toEqual(true)
   })
-  test('element validator  overrules builtIn and config validator', () => {
+  test('element validator overrules builtIn and config validator', () => {
     const config: Config = {
       customValidators: {
         email: (input: string): boolean =>
@@ -1152,5 +1492,207 @@ describe('rules hierarchy', () => {
     fireEvent.input(input, { target: { value: 'test@mail..' } })
     expect(gErrors).toEqual({})
     expect(gFormValidity).toEqual(true)
+  })
+  test('element options overrules options', () => {
+    const config: Config = {
+      globalOptions: { minLength: 3 }
+    }
+    let gErrors = {}
+    let gFormValidity = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, minLength: true },
+                messages: {
+                  required: 'free is required',
+                  minLength: 'min is 2'
+                },
+                options: { minLength: 2 }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('free')
+    fireEvent.input(input, { target: { value: 'G' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      free: { minLength: 'min is 2' }
+    })
+    fireEvent.input(input, { target: { value: 'Ga' } })
+    expect(gFormValidity).toEqual(true)
+    expect(gErrors).toEqual({})
+  })
+  test('element options are not present gets config options', () => {
+    const config: Config = {
+      globalOptions: { minLength: 3 }
+    }
+    let gErrors = {}
+    let gFormValidity = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, minLength: true },
+                messages: {
+                  required: 'free is required',
+                  minLength: 'min is 2'
+                }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('free')
+    fireEvent.input(input, { target: { value: 'G' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      free: { minLength: 'min is 2' }
+    })
+    fireEvent.input(input, { target: { value: 'Ga' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      free: { minLength: 'min is 2' }
+    })
+    fireEvent.input(input, { target: { value: 'Gal' } })
+    expect(gFormValidity).toEqual(true)
+    expect(gErrors).toEqual({})
+  })
+
+  test('validation failed when the option is not anywhere present', () => {
+    let gErrors = {}
+    let gFormValidity = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, minLength: true },
+                messages: {
+                  required: 'free is required',
+                  minLength: 'min is 2'
+                }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('free')
+    fireEvent.input(input, { target: { value: 'G' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      free: { minLength: 'min is 2' }
+    })
+  })
+  test('element messages overrules config', () => {
+    let gErrors = {}
+    let gFormValidity = {}
+    const config: Config = {
+      globalMessages: { required: 'is required' }
+    }
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'free is required'
+                }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('free')
+    fireEvent.input(input, { target: { value: 'G' } })
+    fireEvent.input(input, { target: { value: '' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      free: { required: 'free is required' }
+    })
+  })
+  test('message from global config', () => {
+    let gErrors = {}
+    let gFormValidity = {}
+    const config: Config = {
+      globalMessages: { required: 'is required' }
+    }
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('free')
+    fireEvent.input(input, { target: { value: 'G' } })
+    fireEvent.input(input, { target: { value: '' } })
+    expect(gFormValidity).toEqual(false)
+    expect(gErrors).toEqual({
+      free: { required: 'is required' }
+    })
   })
 })
