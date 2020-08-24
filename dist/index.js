@@ -230,7 +230,7 @@ var useValidator = function useValidator(config) {
         return;
       }
 
-      fn();
+      fn && fn();
     };
   };
 

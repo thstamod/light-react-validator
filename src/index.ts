@@ -1,5 +1,5 @@
 import { useRef, useState, createRef, RefObject, useEffect } from 'react'
-import builtInValidators from './utils/builtIns'
+import builtInValidators from './builtIn/builtIns'
 import { Config, UseValidator } from './types/configuration'
 import { DataField, Rules, Basic } from './types/fields'
 import { getValidators } from './logic/checkValidators'
@@ -23,7 +23,7 @@ export const useValidator = (config?: Config): UseValidator => {
   const shouldRerender = useRef(false)
   const [, rerender] = useState()
 
-  const submitForm = (fn: Function) => (e: Event) => {
+  const submitForm = (fn?: Function) => (e: Event) => {
     e.preventDefault()
     const prevFormValidity = formValidity.current
     if (elements.current.size !== dirtyElements.current.size) {
@@ -38,7 +38,7 @@ export const useValidator = (config?: Config): UseValidator => {
       rerender({})
       return
     }
-    fn()
+    fn && fn()
   }
 
   useEffect(() => {

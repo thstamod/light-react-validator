@@ -179,7 +179,7 @@ const useValidator = config => {
       return;
     }
 
-    fn();
+    fn && fn();
   };
 
   useEffect(() => {
