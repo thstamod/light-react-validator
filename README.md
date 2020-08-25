@@ -4,7 +4,7 @@
 
 [![NPM](https://img.shields.io/npm/v/light-react-validator.svg)](https://www.npmjs.com/package/light-react-validator) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) ![License](https://img.shields.io/github/license/thstamod/light-react-validator) ![last-commit](https://img.shields.io/github/last-commit/thstamod/light-react-validator)
 
-**light-react-validator** is a validator very fast, very small, and with big flexibility!
+**light-react-validator** is a validator very fast, very small, and with extra flexibility!
 
 ## General Idea
 The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages override the previous. For example, builtin validators are overridden by user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** hasn't any default error messages (yet), the element-specific error messages override the global config messages. Also **light-react-validator** re-renders only when is necessary, therefore is very fast!!
@@ -85,7 +85,7 @@ const MyComponent = () => {
                   required: 'email is required',
                   email: 'is not an email'
                 },
-                options: { minLength : 5 }
+                options: { minLength : 3 }
               })
             }
             name='email'
@@ -153,6 +153,50 @@ The **light-react-validator** hook accepts custom config with the following prop
  The above config overrides the builtIn email validator and enables errorOnInvalidDefault, validateFormOnSubmit. Also sets a global error message for the required rule in a case that an element has required rule but NOT a specific error message for this validator.
  Also sets minLength rule 5 which applies on all inputs with minLength rule but without input option specifically for this rule
 
+ #### track example:
+
+ ```tsx
+  <input
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true },
+                messages: {
+                  required: 'email is required'
+                }
+              })
+            }
+            name='email'
+            type='text'
+          />
+ ```
+
+ #### form submit example:
+
+ ```tsx
+
+ const submit = () => {
+    // any code
+  }
+
+  <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
+    // any code
+  </form>
+ ```
+
+ #### errors object example
+
+ ```tsx
+ errors:{
+   email:{required:"email is required",email:"is not an email"},
+   free:{required:"free is required"},
+   drone:{required:"radio is required"},
+   vehicle:{required:"checkbox is required"},
+   groupCheckbox:{required:"checkbox is required",minCheckboxes:"you should check at least 2 checkboxes"},
+   number:{required:"number is required"},
+   select:{required:"select is required"}
+   }
+ ```
+
 ### Validator overrides
 
 The light-react-validator has 3 types of validators:
@@ -178,7 +222,7 @@ The light-react-validator has 3 types of validators:
 | minCheckboxes | input: any, availableOptions: any  |
 
 
-> In order to pass additional arguments to the validator, the arguments should be declared on input's options property which is passed on track phase. !important the validator and the extra arguments should have the same name!!
+> In order to pass additional arguments to the validator, the arguments should be declared on options property. !important the validator and the extra arguments should have the same name!!
 
 ### Track input
 
