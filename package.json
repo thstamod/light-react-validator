@@ -1,6 +1,6 @@
 {
   "name": "light-react-validator",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A small, fast and flexible validator",
   "author": "Thanos Stamodimos <th.stamod@gmail.com>",
   "license": "MIT",
@@ -20,6 +20,16 @@
     "predeploy": "cd example && npm install && npm run build",
     "deploy": "gh-pages -d example/build"
   },
+  "keywords": [
+    "react",
+    "hooks",
+    "form",
+    "form-validation",
+    "custom-validation",
+    "validation",
+    "typescript",
+    "react-hooks"
+  ],
   "peerDependencies": {
     "react": "^16.8.0"
   },
