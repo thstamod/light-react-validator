@@ -1,7 +1,7 @@
 {
   "name": "light-react-validator",
   "version": "1.0.0",
-  "description": "Made with create-react-library",
+  "description": "A small, fast and flexible validator",
   "author": "thstamod",
   "license": "MIT",
   "repository": "thstamod/light-react-validator",
