@@ -2,7 +2,7 @@
   "name": "light-react-validator",
   "version": "1.0.0",
   "description": "A small, fast and flexible validator",
-  "author": "thstamod",
+  "author": "Thanos Stamodimos <th.stamod@gmail.com>",
   "license": "MIT",
   "repository": "thstamod/light-react-validator",
   "main": "dist/index.js",
