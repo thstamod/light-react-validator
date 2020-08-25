@@ -138,17 +138,29 @@ The **light-react-validator** hook accepts custom config with the following prop
  ```tsx
  const config = {
       customValidators: {
-        email: (input: string): boolean =>
-          /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{1})+$/.test(input)
+        emailWithSpecificDomain: (input: string, domain: string): boolean =>
+          /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input) && input.endsWith(domain)
       },
       errorOnInvalidDefault: true,
       validateFormOnSubmit: true,
-      globalMessages: { required: 'this input is required' },
-      globalOptions: { minLength: 5}
+      globalMessages: { required: 'this input is required', emailWithSpecificDomain: 'mail does not end with gr domain' },
+      globalOptions: { minLength: 5, emailWithSpecificDomain: 'gr'}
 
     }
-
+    ...
      const { track, submitForm, errors, formValidity } = useValidator(config)
+
+     ...
+
+      <input
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, emailWithSpecificDomain:true }
+              })
+            }
+            name='email'
+            type='text'
+          />
  ```
  The above config overrides the builtIn email validator and enables errorOnInvalidDefault, validateFormOnSubmit. Also sets a global error message for the required rule in a case that an element has required rule but NOT a specific error message for this validator.
  Also sets minLength rule 5 which applies on all inputs with minLength rule but without input option specifically for this rule
