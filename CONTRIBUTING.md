@@ -12,8 +12,16 @@ git clone https://github.com/thstamod/light-react-validator.git
 
 Install dependencies using [npm](https://npmjs.com)
 
+on root folder:
 ```bash
-npm
+npm install
+npm start
+```
+
+on example folder:
+```bash
+npm install
+npm start
 ```
 
 ### Folder Structure
@@ -70,10 +78,8 @@ npm run test:watch
 
 ### Building
 
-Use this command to build all project bundles and localization files:
+Use this command to build the project for production:
 
 ```bash
-yarn build
-# or
 npm run build
 ```
