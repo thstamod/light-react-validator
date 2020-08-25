@@ -42,8 +42,8 @@ const App = () => {
               track(elem, {
                 rules: { required: true, email: true },
                 messages: {
-                  required: 'email is required'
-                  // email: 'is not an email'
+                  required: 'email is required',
+                  email: 'is not an email'
                 }
               })
             }
