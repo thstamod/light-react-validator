@@ -69,7 +69,6 @@ export const useValidator = (config?: Config): UseValidator => {
           _isValid = false
           if (hasKey(errors.current?.[name], key)) continue
           shouldRerender.current = true
-          // TODO: when message is missing rerenders multiple times
           const errorMsg = throwWarning(
             getHierarchyProperties(messages, config?.globalMessages, key)
           )(`no @ ${key} error message anywhere for ${name} input.`)
