@@ -7,7 +7,7 @@
 **light-react-validator** is a validator very fast, very small, and with extra flexibility!
 
 ## General Idea
-The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages override the previous. For example, builtin validators are overridden by user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** hasn't any default error messages (yet), the element-specific error messages override the global config messages. Also **light-react-validator** re-renders only when is necessary, therefore is very fast!!
+The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages have higher priority, therefore override the farther ones. For example, builtin validators are overridden by the user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** hasn't any default error messages (yet), the element-specific error messages override the global config messages. Also **light-react-validator** re-renders only when is necessary, hence is very fast!!
 
 ## Purpose
 
@@ -138,12 +138,14 @@ The **light-react-validator** hook accepts custom config with the following prop
  ```tsx
  const config = {
       customValidators: {
+         email: (input: string): boolean =>
+          /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{1})+$/.test(input),
         emailWithSpecificDomain: (input: string, domain: string): boolean =>
           /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input) && input.endsWith(domain)
       },
       errorOnInvalidDefault: true,
       validateFormOnSubmit: true,
-      globalMessages: { required: 'this input is required', emailWithSpecificDomain: 'mail does not end with gr domain' },
+      globalMessages: { required: 'this input is required',email: 'is not an email', emailWithSpecificDomain: 'mail does not end with gr domain' },
       globalOptions: { minLength: 5, emailWithSpecificDomain: 'gr'}
 
     }
@@ -155,15 +157,21 @@ The **light-react-validator** hook accepts custom config with the following prop
       <input
             ref={(elem) =>
               track(elem, {
-                rules: { required: true, emailWithSpecificDomain:true }
-              })
+                rules: { required: true, email: true, emailWithSpecificDomain:true }
+              },
+              messages: {required: 'email is required'},
+               options: { emailWithSpecificDomain: 'de'}
+              )
             }
             name='email'
             type='text'
           />
  ```
- The above config overrides the builtIn email validator and enables errorOnInvalidDefault, validateFormOnSubmit. Also sets a global error message for the required rule in a case that an element has required rule but NOT a specific error message for this validator.
- Also sets minLength rule 5 which applies on all inputs with minLength rule but without input option specifically for this rule
+ The above config overrides the builtIn email validator, it creates a new validator (emailWithSpecificDomain) and enables errorOnInvalidDefault, validateFormOnSubmit. Also sets a global error message for the required, email, emailWithSpecificDomain rules in a case that an element has not any error messages of them.
+ Also sets minLength rule 5 which applies on all inputs with minLength rule but without input option specifically for this rule.
+ When the validation occurs, the input will validate against 3 rules **required**, **email**, **emailWithSpecificDomain**.
+ The error message and the **emailWithSpecificDomain** will get them from the input the rest from global
+
 
  #### track example:
 
