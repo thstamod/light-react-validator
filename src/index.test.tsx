@@ -1695,4 +1695,52 @@ describe('rules hierarchy', () => {
       free: { required: 'is required' }
     })
   })
+
+  test('config validator with global message and global option', () => {
+    const config = {
+      customValidators: {
+        emailWithSpecificDomain: (input: string, domain: string): boolean =>
+          /^\w+([-]?\w+)*@\w+([-]?\w+)*(\.\w{2,3})+$/.test(input) &&
+          input.endsWith(domain)
+      },
+      globalMessages: {
+        required: 'this input is required',
+        emailWithSpecificDomain: 'email does not end with gr domain'
+      },
+      globalOptions: { minLength: 5, emailWithSpecificDomain: 'gr' }
+    }
+    let gFormValidity = false
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator(config)
+      gErrors = errors
+      gFormValidity = formValidity
+      return (
+        <div>
+          <input
+            id='email'
+            name='email'
+            aria-label='email'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, emailWithSpecificDomain: true }
+              })
+            }
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('email')
+    fireEvent.input(input, { target: { value: 'test@mail.com' } })
+    expect(gErrors).toEqual({
+      email: { emailWithSpecificDomain: 'email does not end with gr domain' }
+    })
+    expect(gFormValidity).toEqual(false)
+    fireEvent.input(input, { target: { value: 'test@mail.gr' } })
+    expect(gErrors).toEqual({})
+    expect(gFormValidity).toEqual(true)
+  })
 })
