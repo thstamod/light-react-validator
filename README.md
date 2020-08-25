@@ -9,8 +9,6 @@
 ## General Idea
 The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages have higher priority, therefore override the farther ones. For example, builtin validators are overridden by the user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** hasn't any default error messages (yet), the element-specific error messages override the global config messages. Also **light-react-validator** re-renders only when is necessary, hence is very fast!!
 
-## Purpose
-
 ## Demo
 
 ![light-react-validator Demo](demo/light-react-validator.gif)
