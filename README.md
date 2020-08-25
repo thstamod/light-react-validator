@@ -6,20 +6,20 @@
 
 **light-react-validator** is a validator very fast, very small, and with extra flexibility!
 
-## General Idea
+## General idea
 The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages have higher priority, therefore override the farther ones. For example, builtin validators are overridden by the user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** hasn't any default error messages (yet), the element-specific error messages override the global config messages. Also **light-react-validator** re-renders only when is necessary, hence is very fast!!
 
 ## Demo
 
 ![light-react-validator Demo](demo/light-react-validator.gif)
 
-## Install (not published yet)
+## Install
 
 ```bash
 npm install --save light-react-validator
 ```
 
-## Basic Example
+## Basic example
 
 ```tsx
 import React from 'react'
@@ -51,7 +51,7 @@ const MyComponent = () => {
    )
 }
 ```
-## Complex Example
+## Complex example
 
 ```tsx
 import React from 'react'
@@ -114,7 +114,65 @@ The useValidator accepts a config as described below and returns an object with 
 | formValidity | the current validity  status  |   boolean | true
 
 
-EXAMPLES HERE
+
+ ### track example:
+
+ In order to the validator watches the input should be passed the ref through the hook's track function.
+Note: Each field is required to have a unique name as a key.
+
+ ```tsx
+   <input
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, email: true },
+                messages: {
+                  required: 'email is required',
+                   email: 'is not an email'
+                },
+                customValidators: {
+                  // custom validation rules
+                },
+                options: {
+                  //options which passed in specific validators
+                  // validators and options properties must have same name!
+                }
+              })
+            }
+            name='email'
+            onChange={(e) => console.log('original onChange ', e.target.value)}
+            onFocus={(e) => console.log('original onfocus ', e.target.value)}
+            type='text'
+            id='email'
+            defaultValue='test@test.gr'
+          />
+  ```
+
+ ### form submit example:
+
+ ```tsx
+
+ const submit = () => {
+    // any code
+  }
+
+  <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
+    // any code
+  </form>
+ ```
+
+ ### errors object example
+
+ ```tsx
+ errors:{
+   email:{required:"email is required",email:"is not an email"},
+   free:{required:"free is required"},
+   drone:{required:"radio is required"},
+   vehicle:{required:"checkbox is required"},
+   groupCheckbox:{required:"checkbox is required",minCheckboxes:"you should check at least 2 checkboxes"},
+   number:{required:"number is required"},
+   select:{required:"select is required"}
+   }
+ ```
 
 ## Options
 
@@ -165,55 +223,12 @@ The **light-react-validator** hook accepts custom config with the following prop
             type='text'
           />
  ```
- The above config overrides the builtIn email validator, it creates a new validator (emailWithSpecificDomain) and enables errorOnInvalidDefault, validateFormOnSubmit. Also sets a global error message for the required, email, emailWithSpecificDomain rules in a case that an element has not any error messages of them.
- Also sets minLength rule 5 which applies on all inputs with minLength rule but without input option specifically for this rule.
+ The above config overrides the builtIn email validator, it creates a new validator (emailWithSpecificDomain) and enables errorOnInvalidDefault, validateFormOnSubmit. Also, it sets a global error message for the required, email, emailWithSpecificDomain rules in a case that an element has not any error messages of them.
+ Moreover, it sets minLength rule 5 which applies on all inputs with minLength rule but without input option specifically for this rule.
  When the validation occurs, the input will validate against 3 rules **required**, **email**, **emailWithSpecificDomain**.
  The error message and the **emailWithSpecificDomain** will get them from the input the rest from global
 
 
- #### track example:
-
- ```tsx
-  <input
-            ref={(elem) =>
-              track(elem, {
-                rules: { required: true },
-                messages: {
-                  required: 'email is required'
-                }
-              })
-            }
-            name='email'
-            type='text'
-          />
- ```
-
- #### form submit example:
-
- ```tsx
-
- const submit = () => {
-    // any code
-  }
-
-  <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
-    // any code
-  </form>
- ```
-
- #### errors object example
-
- ```tsx
- errors:{
-   email:{required:"email is required",email:"is not an email"},
-   free:{required:"free is required"},
-   drone:{required:"radio is required"},
-   vehicle:{required:"checkbox is required"},
-   groupCheckbox:{required:"checkbox is required",minCheckboxes:"you should check at least 2 checkboxes"},
-   number:{required:"number is required"},
-   select:{required:"select is required"}
-   }
- ```
 
 ### Validator overrides
 
@@ -242,37 +257,6 @@ The light-react-validator has 3 types of validators:
 
 > In order to pass additional arguments to the validator, the arguments should be declared on options property. !important the validator and the extra arguments should have the same name!!
 
-### Track input
-
-In order to the validator watches the input should be passed the ref through the hook's track function.
-Note: Each field is required to have a unique name as a key.
-
- ```tsx
-   <input
-            ref={(elem) =>
-              track(elem, {
-                rules: { required: true, email: true },
-                messages: {
-                  required: 'email is required',
-                   email: 'is not an email'
-                },
-                customValidators: {
-                  // custom validation rules
-                },
-                options: {
-                  //options which passed in specific validators
-                  // validators and options properties must have same name!
-                }
-              })
-            }
-            name='email'
-            onChange={(e) => console.log('original onChange ', e.target.value)}
-            onFocus={(e) => console.log('original onfocus ', e.target.value)}
-            type='text'
-            id='email'
-            defaultValue='test@test.gr'
-          />
-  ```
 
 ## Contributing
 You are welcome to contribute to this project, but before you do, please make sure you read the [contribution guide](https://github.com/thstamod/light-react-validator/blob/master/CONTRIBUTING.md).
