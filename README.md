@@ -8,7 +8,7 @@
 
 
 ## 🎤 General idea
-The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages have higher priority, therefore override the farther ones. For example, builtin validators are overridden by the user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** hasn't any default error messages (yet), the element-specific error messages override the global config messages. Also **light-react-validator** re-renders only when is necessary, hence is very fast!!
+The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages have higher priority, therefore they override the farther ones. For example, builtin validators are overridden by the user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** doesn't have any default error messages (yet), the element-specific error messages override the global config messages. Also, the **light-react-validator** re-renders only when it is necessary, hence it is very fast!
 
 ## 🎥 Demo
 
@@ -118,7 +118,7 @@ The useValidator accepts a config as described below and returns an object with 
 
  ### track example:
 
- In order to the validator watches the input should be passed the ref through the hook's track function.
+ In order to the validator watch, the input should be passed to the ref through the hook's track function.
 Note: Each field is required to have a unique name as a key.
 
  ```tsx
@@ -224,10 +224,12 @@ The **light-react-validator** hook accepts custom config with the following prop
             type='text'
           />
  ```
- The above config overrides the builtIn email validator, it creates a new validator (emailWithSpecificDomain) and enables errorOnInvalidDefault, validateFormOnSubmit. Also, it sets a global error message for the required, email, emailWithSpecificDomain rules in a case that an element has not any error messages of them.
+
+
+  The above config overrides the builtIn email validator, it creates a new validator (emailWithSpecificDomain) and enables errorOnInvalidDefault, validateFormOnSubmit. Also, it sets a global error message for the required, email, emailWithSpecificDomain rules in case that an element does not have any error messages of them.
  Moreover, it sets minLength rule 5 which applies on all inputs with minLength rule but without input option specifically for this rule.
  When the validation occurs, the input will validate against 3 rules **required**, **email**, **emailWithSpecificDomain**.
- The error message and the **emailWithSpecificDomain** will get them from the input the rest from global
+ The error message and the **emailWithSpecificDomain** will get them from the input and the rest from the global config
 
 
 
@@ -256,7 +258,7 @@ The light-react-validator has 3 types of validators:
 | minCheckboxes | input: any, availableOptions: any  |
 
 
-> In order to pass additional arguments to the validator, the arguments should be declared on options property. !important the validator and the extra arguments should have the same name!!
+> In order to pass additional arguments to the validator, the arguments should be declared on the options property. !Important the validator and the extra arguments should have the same name!
 
 
 
