@@ -1,6 +1,6 @@
 {
   "name": "light-react-validator",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A small, fast and flexible validator",
   "author": "Thanos Stamodimos <th.stamod@gmail.com>",
   "license": "MIT",
