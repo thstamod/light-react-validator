@@ -1,25 +1,26 @@
 # light-react-validator
 
-> Made with create-react-library
-
-[![NPM](https://img.shields.io/npm/v/light-react-validator.svg)](https://www.npmjs.com/package/light-react-validator) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) ![License](https://img.shields.io/github/license/thstamod/light-react-validator) ![last-commit](https://img.shields.io/github/last-commit/thstamod/light-react-validator)
+[![NPM](https://img.shields.io/npm/v/light-react-validator.svg)](https://www.npmjs.com/package/light-react-validator) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) ![License](https://img.shields.io/github/license/thstamod/light-react-validator) ![last-commit](https://img.shields.io/github/last-commit/thstamod/light-react-validator) ![size](https://img.shields.io/bundlephobia/min/light-react-validator)
 
 **light-react-validator** is a validator very fast, very small, and with extra flexibility!
+> Made with create-react-library
 
-## General idea
+
+
+## 🎤 General idea
 The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages have higher priority, therefore override the farther ones. For example, builtin validators are overridden by the user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** hasn't any default error messages (yet), the element-specific error messages override the global config messages. Also **light-react-validator** re-renders only when is necessary, hence is very fast!!
 
-## Demo
+## 🎥 Demo
 
 ![light-react-validator Demo](demo/light-react-validator.gif)
 
-## Install
+## 📦 Install
 
 ```bash
 npm install --save light-react-validator
 ```
 
-## Basic example
+## 🚲 Basic example
 
 ```tsx
 import React from 'react'
@@ -51,7 +52,7 @@ const MyComponent = () => {
    )
 }
 ```
-## Complex example
+## 🛵 Complex example
 
 ```tsx
 import React from 'react'
@@ -104,7 +105,7 @@ const MyComponent = () => {
 ```
 
 
-## The **useValidator** hook
+## 🚀 The **useValidator** hook
 The useValidator accepts a config as described below and returns an object with the following properties:
 | Property        | Description           | Type  |  Default
 | ------------- |:-------------:| -----:| -------:|
@@ -160,7 +161,7 @@ Note: Each field is required to have a unique name as a key.
   </form>
  ```
 
- ### errors object example
+ ### errors object example:
 
  ```tsx
  errors:{
@@ -174,9 +175,9 @@ Note: Each field is required to have a unique name as a key.
    }
  ```
 
-## Options
+## 🛠 Options
 
-### global config options (optional)
+### global config options (optional):
 
 The **light-react-validator** hook accepts custom config with the following properties:
 | Variable        | Description           | Type  |  Default
@@ -187,7 +188,7 @@ The **light-react-validator** hook accepts custom config with the following prop
 | globalMessages      | global error messages      |   object | undefined
 | globalOptions |    global options   |   object | undefined
 
- **All the above properties are optional**
+ **Note: All the above properties are optional.**
 
  **custom config example**
 
@@ -258,12 +259,13 @@ The light-react-validator has 3 types of validators:
 > In order to pass additional arguments to the validator, the arguments should be declared on options property. !important the validator and the extra arguments should have the same name!!
 
 
-## Contributing
+
+## 🤩 Contributing
 You are welcome to contribute to this project, but before you do, please make sure you read the [contribution guide](https://github.com/thstamod/light-react-validator/blob/master/CONTRIBUTING.md).
 
-## Acknowledgments
+## 🎉 Acknowledgments
 The initial idea came from [react-hook-form](https://github.com/react-hook-form/react-hook-form)
 
-## License
+## 🎈 License
 
 MIT © [thstamod](https://github.com/thstamod)
