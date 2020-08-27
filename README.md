@@ -109,7 +109,7 @@ const MyComponent = () => {
 The useValidator accepts a config as described below and returns an object with the following properties:
 | Property        | Description           | Type  |  Default
 | ------------- |:-------------:| -----:| -------:|
-| track     | this function initialize the "watcher" for this specific input. Basically it's a callback ref function | function | -
+| track     | this function initialize the "watcher" for this specific input. Basically it's a callback ref function, and should be passed as on the example below | function | -
 | submitForm (optional) | this function is a hof function (high order function).The first's function argument is a function which runs on form submit after successful validation and the second's functions argument is the event  |   function | -
 | errors | An object with the errors if any errors exist. The errors are separated by input's name on depth 0 and with validation rule on depth 1.  |   object | {}
 | formValidity | the current validity  status  |   boolean | true
