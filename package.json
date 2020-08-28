@@ -21,8 +21,8 @@
     "test:unit": "cross-env CI=1 react-scripts test --env=jsdom --colors",
     "bundlesize": "bundlesize",
     "test:watch": "react-scripts test --env=jsdom --colors",
-    "predeploy": "cd example && npm install && npm run build",
-    "deploy": "gh-pages -d example/build"
+    "predeploy": "cd demo && npm install && npm run build",
+    "deploy": "gh-pages -d demo/build"
   },
   "keywords": [
     "react",

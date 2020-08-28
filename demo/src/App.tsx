@@ -11,25 +11,24 @@ const App = () => {
   const { track, submitForm, errors, formValidity } = useValidator(config)
   console.log(`rerenders: ${rerenders.current} times`)
 
-  // console.log('ERRORS', errors)
   const submit = submitForm((e: Event) => {
     console.log('submitted', e)
     var form = document.querySelector('form')
     console.log(serialize(form))
   })
   const showErrors = (errors: any) => {
-    const t = []
+    const e = []
     for (const key in errors) {
       if (errors.hasOwnProperty(key)) {
         const element = errors[key]
-        t.push(
+        e.push(
           <span className='error' key={key}>
             {element}
           </span>
         )
       }
     }
-    return t
+    return e
   }
 
   return (
@@ -50,7 +49,7 @@ const App = () => {
             name='email'
             onChange={(e) => console.log('original onChange ', e.target.value)}
             onFocus={(e) => console.log('original onfocus ', e.target.value)}
-            type='text'
+            type='email'
             id='email'
             defaultValue='test@test.gr'
           />
