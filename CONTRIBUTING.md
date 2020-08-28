@@ -43,22 +43,8 @@ If your issue gets closed for not providing enough info or not responding to the
 
 ### Code Style
 
-The code style is enforced with `eslint` and is checked automatically whenever you commit. Any violation of the code style may prevent merging your contribution so make sure you follow it. And yes we love our semi-colons.
+Please follow the coding style of the project. light-react-validator uses `eslint` and `prettier`. If possible, enable their respective plugins in your editor to get real-time feedback. The linting can be run manually with the following command: npm run lint
 
-
-### Pull Requests
-
-- Make sure you fill the PR template provided.
-- PRs should have titles that are clear as possible.
-- Make sure that your PR is up to date with the branch you are targeting, use `git rebase` for this.
-- Unfinished/In-Progress PRs should have `[WIP]` prefix to them, and preferably a checklist for ongoing todos.
-- Make sure to mention which issues are being fixed by the PR so they can be closed properly.
-- Make sure to preview all pending PRs to make sure your work won't conflict with other ongoing pull-request.
-- Coordinate with ongoing conflicting PRs' authors to make it easier to merge both your PRs.
-
-### Source Code
-
-Currently we are using ES2015 (ES6) for the source code, using buble and rollup to convert and bundle it to ES5, the available builds are: non-minified and minified and esm build.
 
 ### Testing
 
