@@ -12,7 +12,7 @@
 
 
 ## 🎤 General idea
-The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages have higher priority, therefore they override the farther ones. For example, builtin validators are overridden by the user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** doesn't have any default error messages (yet), the element-specific error messages override the global config messages. Also, the **light-react-validator** re-renders only when it is necessary, hence it is very fast!
+The validator follows the "prototypal inheritance" model for the configuration. The idea is simple: The closest to the element rules and messages have higher priority, therefore they override the farther ones. For example, built-in validators are overridden by the user's global config validators (customValidators), which are overridden by element-specific validators. Same thing with error messages. Because **light-react-validator** doesn't have any default error messages (yet), the element-specific error messages override the global config messages. Also, the **light-react-validator** re-renders only when it is necessary, hence it is very fast!
 
 ## 🎥 Demo
 
@@ -85,8 +85,12 @@ const config = {
 const MyComponent = () => {
    const { track, submitForm, errors, formValidity } = useValidator(config)
 
+const submit = submitForm((e) => {
+    // any code
+  })
+
    return (
-      <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
+      <form id='form' onSubmit={(e) => submit(e)}>
         <div className='form-group'>
           <label htmlFor='email'>Email</label>
           <input
@@ -195,7 +199,7 @@ Note: Each field is required to have a unique name as a key.
 The **light-react-validator** hook accepts custom config with the following properties:
 | Variable        | Description           | Type  |  Default
 | ------------- |:-------------:| -----:| -------:|
-| customValidators     | You can specify custom validators in order to override the builtIn validators | object | undefined
+| customValidators     | You can specify custom validators in order to override the built-in validators | object | undefined
 | validateFormOnSubmit      | Validation starts on submit      |   boolean | false
 | errorOnInvalidDefault |    If an input has default value on render, it shows the error immediately   |   boolean | false
 | globalMessages      | Global error messages      |   object | undefined
@@ -239,7 +243,7 @@ The **light-react-validator** hook accepts custom config with the following prop
  ```
 
 
-  The above config overrides the builtIn email validator, it creates a new validator (emailWithSpecificDomain) and enables errorOnInvalidDefault, validateFormOnSubmit. Also, it sets a global error message for the required, email, emailWithSpecificDomain rules in case that an element does not have any error messages of them.
+  The above config overrides the built-in email validator, it creates a new validator (emailWithSpecificDomain) and enables errorOnInvalidDefault, validateFormOnSubmit. Also, it sets a global error message for the required, email, emailWithSpecificDomain rules in case that an element does not have any error messages of them.
  Moreover, it sets minLength rule 5 which applies on all inputs with minLength rule but without input option specifically for this rule.
  When the validation occurs, the input will validate against 3 rules **required**, **email**, **emailWithSpecificDomain**.
  The error message and the **emailWithSpecificDomain** will get them from the input and the rest from the global config
@@ -249,20 +253,20 @@ The **light-react-validator** hook accepts custom config with the following prop
 ### Validator overrides
 
 The light-react-validator has 3 types of validators:
-* BuiltIn
+* Built-in
 * Global config
 * Input-specific
 
  > **Input specific** validators overrides **Global config** validators and those overrides **BuiltIn** validators
 
- #### BuiltIn Validators
+ #### Built-in Validators
  1. required
  2. email
  3. minLength
  4. maxLength
  5. minCheckboxes
 
-| BuiltIn        | Arguments    |
+| Built-in        | Arguments    |
 | ------------- |:-------------:|
 | required     | value: T |
 | email      | input: string      |
