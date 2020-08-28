@@ -1,4 +1,8 @@
-# light-react-validator
+<p align="center">
+  <img src="images/image.jpg" width="400" alt="microbundle">
+</p>
+<h1 align="center">light-react-validator</h1>
+
 
 [![NPM](https://img.shields.io/npm/v/light-react-validator.svg)](https://www.npmjs.com/package/light-react-validator) [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com) ![License](https://img.shields.io/github/license/thstamod/light-react-validator) ![last-commit](https://img.shields.io/github/last-commit/thstamod/light-react-validator) ![size](https://img.shields.io/bundlephobia/min/light-react-validator)
 
@@ -12,7 +16,16 @@ The validator follows the "prototypal inheritance" model for the configuration. 
 
 ## 🎥 Demo
 
-![light-react-validator Demo](demo/light-react-validator.gif)
+![light-react-validator Demo](images/light-react-validator.gif)
+
+
+## ✨ Features
+* Very light
+* Very flexible
+* Full customizable
+* 0 configuration
+* Built-in validators
+
 
 ## 📦 Install
 
