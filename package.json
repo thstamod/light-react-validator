@@ -1,6 +1,6 @@
 {
   "name": "light-react-validator",
-  "version": "1.0.4",
+  "version": "1.0.2",
   "description": "A small, fast and flexible validator",
   "author": "Thanos Stamodimos <th.stamod@gmail.com>",
   "license": "MIT",
@@ -12,10 +12,14 @@
     "node": ">=10"
   },
   "scripts": {
+    "clean": "rimraf dist",
     "build": "microbundle-crl --compress --format modern,cjs",
     "start": "microbundle-crl watch --no-compress --format modern,cjs",
+    "lint": "eslint '**/*.{js,ts,tsx}'",
     "test": "run-s test:unit build",
+    "coverage": "react-scripts test --env=jsdom --coverage  --watchAll=false --silent --colors",
     "test:unit": "cross-env CI=1 react-scripts test --env=jsdom --colors",
+    "bundlesize": "bundlesize",
     "test:watch": "react-scripts test --env=jsdom --colors",
     "predeploy": "cd example && npm install && npm run build",
     "deploy": "gh-pages -d example/build"
@@ -35,8 +39,8 @@
   },
   "devDependencies": {
     "@testing-library/dom": "^7.22.2",
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.5.0",
+    "@testing-library/jest-dom": "^5.11.4",
+    "@testing-library/react": "^10.4.9",
     "@testing-library/react-hooks": "^3.4.1",
     "@testing-library/user-event": "^12.1.1",
     "@types/jest": "^25.1.4",
@@ -46,6 +50,7 @@
     "@typescript-eslint/eslint-plugin": "^2.26.0",
     "@typescript-eslint/parser": "^2.26.0",
     "babel-eslint": "^10.0.3",
+    "bundlesize": "^0.18.0",
     "cross-env": "^7.0.2",
     "eslint": "^6.8.0",
     "eslint-config-prettier": "^6.7.0",
@@ -67,6 +72,36 @@
     "react-test-renderer": "^16.13.1",
     "typescript": "^3.7.5"
   },
+  "jest": {
+    "collectCoverageFrom": [
+      "src/**/*.{js,jsx,ts,tsx}",
+      "!<rootDir>/node_modules/",
+      "!src/types/*",
+      "!**/*.{tw.js,config.js}",
+      "!**/*.d.ts"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 80,
+        "functions": 80,
+        "lines": 80,
+        "statements": 80
+      }
+    },
+    "coverageReporters": [
+      "text"
+    ]
+  },
+  "bundlesize": [
+    {
+      "path": "./dist/index.js",
+      "maxSize": "3 kB"
+    },
+    {
+      "path": "./dist/index.modern.js",
+      "maxSize": "3 kB"
+    }
+  ],
   "files": [
     "dist"
   ]
