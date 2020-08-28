@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom'
-import React from 'react'
+import React, { useRef } from 'react'
 import { render, fireEvent, cleanup, screen } from '@testing-library/react'
 import { renderHook } from '@testing-library/react-hooks'
 import { act } from 'react-dom/test-utils'
@@ -1740,6 +1740,62 @@ describe('rules hierarchy', () => {
     })
     expect(gFormValidity).toEqual(false)
     fireEvent.input(input, { target: { value: 'test@mail.gr' } })
+    expect(gErrors).toEqual({})
+    expect(gFormValidity).toEqual(true)
+  })
+})
+
+describe('custom validation', () => {
+  test('must have same value with another input', () => {
+    let gFormValidity = false
+    let gErrors = {}
+    const Component = () => {
+      const { track, submitForm, errors, formValidity } = useValidator()
+      gErrors = errors
+      gFormValidity = formValidity
+      const freeRef = useRef()
+      return (
+        <div>
+          <input
+            id='text'
+            name='text'
+            aria-label='text'
+            type='text'
+            ref={(elem) =>
+              track(elem, {
+                rules: { required: true, sameWithFree: true },
+                messages: {
+                  required: 'email is required',
+                  sameWithFree: 'they are not the same'
+                },
+                customValidators: {
+                  sameWithFree: (input, available) =>
+                    available.current.value === input
+                },
+                options: { sameWithFree: freeRef }
+              })
+            }
+          />
+          <input
+            id='free'
+            name='free'
+            aria-label='free'
+            type='free'
+            defaultValue='free'
+            ref={freeRef}
+          />
+        </div>
+      )
+    }
+
+    const t = render(<Component />)
+    const input = t.getByLabelText('text')
+    fireEvent.input(input, { target: { value: 'f' } })
+    expect(gErrors).toEqual({
+      text: { sameWithFree: 'they are not the same' }
+    })
+    expect(gFormValidity).toEqual(false)
+    fireEvent.input(input, { target: { value: 'free' } })
     expect(gErrors).toEqual({})
     expect(gFormValidity).toEqual(true)
   })
