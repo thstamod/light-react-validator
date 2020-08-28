@@ -43,7 +43,7 @@ If your issue gets closed for not providing enough info or not responding to the
 
 ### Code Style
 
-Please follow the coding style of the project. light-react-validator uses `eslint` and `prettier`. If possible, enable their respective plugins in your editor to get real-time feedback. The linting can be run manually with the following command: npm run lint
+Please follow the coding style of the project. light-react-validator uses `eslint` and `prettier`. If possible, enable their respective plugins in your editor to get real-time feedback. The linting can be run manually with the following command: `npm run lint`
 
 
 ### Testing

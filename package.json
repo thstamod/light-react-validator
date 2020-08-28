@@ -16,7 +16,7 @@
     "build": "microbundle-crl --compress --format modern,cjs",
     "start": "microbundle-crl watch --no-compress --format modern,cjs",
     "lint": "eslint '**/*.{js,ts,tsx}'",
-    "test": "run-s test:unit build",
+    "prepublish": "run-s test:unit lint build bundlesize",
     "coverage": "react-scripts test --env=jsdom --coverage  --watchAll=false --silent --colors",
     "test:unit": "cross-env CI=1 react-scripts test --env=jsdom --colors",
     "bundlesize": "bundlesize",
