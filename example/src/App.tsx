@@ -12,11 +12,11 @@ const App = () => {
   console.log(`rerenders: ${rerenders.current} times`)
 
   // console.log('ERRORS', errors)
-  const submit = () => {
-    console.log('submitted')
+  const submit = submitForm((e: Event) => {
+    console.log('submitted', e)
     var form = document.querySelector('form')
     console.log(serialize(form))
-  }
+  })
   const showErrors = (errors: any) => {
     const t = []
     for (const key in errors) {
@@ -34,7 +34,7 @@ const App = () => {
 
   return (
     <>
-      <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
+      <form id='form' onSubmit={(e) => submit(e)}>
         <div className='form-group'>
           <label htmlFor='email'>Email</label>
           <input

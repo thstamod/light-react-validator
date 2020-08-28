@@ -38,7 +38,7 @@ export const useValidator = (config?: Config): UseValidator => {
       rerender({})
       return
     }
-    fn && fn()
+    fn && fn(e)
   }
 
   useEffect(() => {

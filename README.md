@@ -109,10 +109,10 @@ const MyComponent = () => {
 The useValidator accepts a config as described below and returns an object with the following properties:
 | Property        | Description           | Type  |  Default
 | ------------- |:-------------:| -----:| -------:|
-| track     | this function initialize the "watcher" for this specific input. Basically it's a callback ref function, and should be passed as on the example below | function | -
-| submitForm (optional) | this function is a hof function (high order function).The first's function argument is a function which runs on form submit after successful validation and the second's functions argument is the event  |   function | -
+| track     | This function initialize the "watcher" for this specific input. Should be passed as on the example below | function | -
+| submitForm (optional) | This function is a hof function (high order function).The first's function argument is a function which runs on form submit after successful validation and the second's functions argument is the event  |   function | -
 | errors | An object with the errors if any errors exist. The errors are separated by input's name on depth 0 and with validation rule on depth 1.  |   object | {}
-| formValidity | the current validity  status  |   boolean | true
+| formValidity | The current validity  status  |   boolean | true
 
 
 
@@ -152,11 +152,11 @@ Note: Each field is required to have a unique name as a key.
 
  ```tsx
 
- const submit = () => {
+ const submit = submitForm((e) => {
     // any code
-  }
+  })
 
-  <form id='form' onSubmit={(e) => submitForm(submit)(e)}>
+  <form id='form' onSubmit={(e) => submit(e)}>
     // any code
   </form>
  ```
@@ -183,10 +183,10 @@ The **light-react-validator** hook accepts custom config with the following prop
 | Variable        | Description           | Type  |  Default
 | ------------- |:-------------:| -----:| -------:|
 | customValidators     | You can specify custom validators in order to override the builtIn validators | object | undefined
-| validateFormOnSubmit      | validation starts on submit      |   boolean | false
-| errorOnInvalidDefault |    if an input has default value on render, it shows the error immediately   |   boolean | false
-| globalMessages      | global error messages      |   object | undefined
-| globalOptions |    global options   |   object | undefined
+| validateFormOnSubmit      | Validation starts on submit      |   boolean | false
+| errorOnInvalidDefault |    If an input has default value on render, it shows the error immediately   |   boolean | false
+| globalMessages      | Global error messages      |   object | undefined
+| globalOptions |    Global options   |   object | undefined
 
  **Note: All the above properties are optional.**
 
@@ -260,7 +260,11 @@ The light-react-validator has 3 types of validators:
 
 > In order to pass additional arguments to the validator, the arguments should be declared on the options property. !Important the validator and the extra arguments should have the same name!
 
+## 🛣 Roadmap
 
+* Docs
+* Examples
+* More features
 
 ## 🤩 Contributing
 You are welcome to contribute to this project, but before you do, please make sure you read the [contribution guide](https://github.com/thstamod/light-react-validator/blob/master/CONTRIBUTING.md).
